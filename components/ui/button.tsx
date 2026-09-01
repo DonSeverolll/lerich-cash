@@ -5,14 +5,16 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
-        default: 'bg-emerald-500 text-zinc-950 hover:bg-emerald-400',
-        outline: 'border border-zinc-700 bg-zinc-900 text-zinc-100 hover:bg-zinc-800',
-        ghost: 'text-zinc-200 hover:bg-zinc-800',
-        destructive: 'bg-rose-500 text-white hover:bg-rose-400',
+        default:
+          'bg-gradient-to-b from-gold-300 to-gold-600 text-black shadow-gold hover:from-gold-200 hover:to-gold-500',
+        outline: 'border border-gold-500/30 bg-black/40 text-gold-100 hover:border-gold-500/60 hover:bg-gold-500/10',
+        ghost: 'text-onyx-200 hover:bg-white/5 hover:text-gold-100',
+        subtle: 'border border-white/10 bg-white/5 text-onyx-100 hover:bg-white/10',
+        destructive: 'border border-rose-500/30 bg-rose-500/15 text-rose-100 hover:bg-rose-500/25',
       },
       size: {
         default: 'h-10 px-4 py-2',

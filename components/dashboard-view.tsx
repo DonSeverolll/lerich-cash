@@ -1,11 +1,16 @@
 'use client';
 
-import { Activity, ArrowDownRight, ArrowUpRight, Wallet, Clock3 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { ArrowDownRight, ArrowUpRight, Clock3, PiggyBank, TrendingUp, Wallet } from 'lucide-react';
 import {
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
+  Legend,
+  Line,
+  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -14,80 +19,206 @@ import {
   YAxis,
 } from 'recharts';
 
-import { mockAccounts, mockCategories, mockSubscriptions, mockTransactions } from '@/lib/mock-data';
+import { availableMonths, mockAccounts, mockCategories, mockSubscriptions, mockTransactions } from '@/lib/mock-data';
+import {
+  chartAxis,
+  chartGrid,
+  chartTooltipStyle,
+  compactTick,
+  goldPalette,
+  negativeColor,
+  positiveColor,
+} from '@/lib/chart-theme';
 import { currencyBRL } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select } from '@/components/ui/select';
+import { StatCard } from '@/components/ui/stat-card';
 
-const palette = ['#10b981', '#34d399', '#f43f5e', '#fb7185', '#f97316', '#8b5cf6', '#22c55e', '#38bdf8'];
-
-const monthlyFlow = [
-  { name: 'Jan', receitas: 5600, despesas: 3100 },
-  { name: 'Fev', receitas: 6200, despesas: 3400 },
-  { name: 'Mar', receitas: 5900, despesas: 3600 },
-  { name: 'Abr', receitas: 6700, despesas: 3900 },
-  { name: 'Mai', receitas: 7100, despesas: 4100 },
-  { name: 'Jun', receitas: 6800, despesas: 4300 },
-  { name: 'Jul', receitas: 7200, despesas: 3900 },
-  { name: 'Ago', receitas: 8050, despesas: 4680 },
-];
+function monthKeyLabel(key: string) {
+  const [ano, mes] = key.split('-').map(Number);
+  return new Intl.DateTimeFormat('pt-BR', { month: 'short', year: '2-digit' }).format(new Date(ano, mes - 1, 1));
+}
 
 export function DashboardView() {
-  const receitasMes = mockTransactions
-    .filter((item) => item.tipo === 'RECEITA' && new Date(item.data_transacao).getMonth() === 7)
+  const months = useMemo(() => availableMonths(), []);
+  const [selectedMonth, setSelectedMonth] = useState(months[0]);
+
+  const doMes = useMemo(
+    () => mockTransactions.filter((tx) => tx.data_transacao.startsWith(selectedMonth)),
+    [selectedMonth],
+  );
+
+  const receitasMes = doMes.filter((tx) => tx.tipo === 'RECEITA').reduce((sum, tx) => sum + tx.valor, 0);
+  const despesasMes = doMes.filter((tx) => tx.tipo === 'DESPESA').reduce((sum, tx) => sum + tx.valor, 0);
+  const resultado = receitasMes - despesasMes;
+  const taxaPoupanca = receitasMes > 0 ? (resultado / receitasMes) * 100 : 0;
+
+  const totalComprometido = mockSubscriptions
+    .filter((item) => item.ativo)
     .reduce((sum, item) => sum + item.valor, 0);
 
-  const despesasMes = mockTransactions
-    .filter((item) => item.tipo === 'DESPESA' && new Date(item.data_transacao).getMonth() === 7)
-    .reduce((sum, item) => sum + item.valor, 0);
-
-  const totalComprometido = mockSubscriptions.reduce((sum, item) => sum + item.valor, 0);
   const saldoConsolidado = mockAccounts.reduce((sum, account) => sum + account.saldo_inicial, 0);
+  const pendentes = doMes.filter((tx) => tx.status === 'PENDENTE');
 
-  const despesasPorCategoria = mockCategories
-    .filter((cat) => cat.tipo === 'DESPESA')
-    .map((cat) => {
-      const total = mockTransactions
-        .filter((tx) => tx.categoria_id === cat.id && tx.tipo === 'DESPESA')
-        .reduce((sum, tx) => sum + tx.valor, 0);
+  // Comparação com o mês anterior. Se o mês selecionado ainda está em curso,
+  // comparamos período equivalente (dia 1 até hoje) para não distorcer.
+  const agora = new Date();
+  const chaveMesAtual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`;
+  const mesEmCurso = selectedMonth === chaveMesAtual;
+  const diaCorte = mesEmCurso ? agora.getDate() : 31;
 
-      return { name: cat.nome, value: total, color: cat.cor_hex || palette[0] };
+  const indiceAtual = months.indexOf(selectedMonth);
+  const mesAnterior = months[indiceAtual + 1];
+  const despesasAnterior = mesAnterior
+    ? mockTransactions
+        .filter(
+          (tx) =>
+            tx.data_transacao.startsWith(mesAnterior) &&
+            tx.tipo === 'DESPESA' &&
+            new Date(tx.data_transacao).getDate() <= diaCorte,
+        )
+        .reduce((sum, tx) => sum + tx.valor, 0)
+    : 0;
+  const variacaoDespesas = despesasAnterior ? ((despesasMes - despesasAnterior) / despesasAnterior) * 100 : 0;
+
+  const fluxoMensal = useMemo(
+    () =>
+      [...months]
+        .reverse()
+        .map((key) => {
+          const doPeriodo = mockTransactions.filter((tx) => tx.data_transacao.startsWith(key));
+          const receitas = doPeriodo.filter((tx) => tx.tipo === 'RECEITA').reduce((sum, tx) => sum + tx.valor, 0);
+          const despesas = doPeriodo.filter((tx) => tx.tipo === 'DESPESA').reduce((sum, tx) => sum + tx.valor, 0);
+          return { name: monthKeyLabel(key), receitas, despesas, saldo: receitas - despesas };
+        }),
+    [months],
+  );
+
+  const despesasPorCategoria = useMemo(
+    () =>
+      mockCategories
+        .filter((cat) => cat.tipo === 'DESPESA')
+        .map((cat, index) => ({
+          name: cat.nome,
+          value: doMes
+            .filter((tx) => tx.categoria_id === cat.id && tx.tipo === 'DESPESA')
+            .reduce((sum, tx) => sum + tx.valor, 0),
+          color: cat.cor_hex || goldPalette[index % goldPalette.length],
+        }))
+        .filter((item) => item.value > 0)
+        .sort((a, b) => b.value - a.value),
+    [doMes],
+  );
+
+  const maiorCategoria = despesasPorCategoria[0];
+  const hoje = new Date();
+  const proximasAssinaturas = [...mockSubscriptions]
+    .filter((item) => item.ativo)
+    .sort((a, b) => {
+      const distancia = (dia: number) => (dia - hoje.getDate() + 31) % 31;
+      return distancia(a.dia_vencimento) - distancia(b.dia_vencimento);
     })
-    .filter((item) => item.value > 0);
-
-  const nextSubscriptions = mockSubscriptions.slice(0, 3);
-  const lastTransactions = mockTransactions.slice(0, 5);
+    .slice(0, 4);
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-onyx-400">
+            Resumo de <span className="capitalize text-gold-200">{monthKeyLabel(selectedMonth)}</span>
+          </p>
+          {mesEmCurso ? <Badge tone="warning">mês em curso</Badge> : null}
+        </div>
+        <Select
+          aria-label="Selecionar mês"
+          className="sm:w-48"
+          value={selectedMonth}
+          onChange={(event) => setSelectedMonth(event.target.value)}
+        >
+          {months.map((key) => (
+            <option key={key} value={key}>
+              {monthKeyLabel(key)}
+            </option>
+          ))}
+        </Select>
+      </div>
+
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard title="Saldo consolidado" value={currencyBRL(saldoConsolidado)} tone="success" icon={<Wallet className="h-5 w-5" />} />
-        <StatCard title="Receitas do mês" value={currencyBRL(receitasMes)} tone="success" icon={<ArrowUpRight className="h-5 w-5" />} />
-        <StatCard title="Despesas do mês" value={currencyBRL(despesasMes)} tone="danger" icon={<ArrowDownRight className="h-5 w-5" />} />
-        <StatCard title="Comprometido" value={currencyBRL(totalComprometido)} tone="neutral" icon={<Activity className="h-5 w-5" />} />
+        <StatCard
+          title="Saldo consolidado"
+          value={currencyBRL(saldoConsolidado)}
+          hint={`${mockAccounts.length} contas conectadas`}
+          tone="gold"
+          icon={<Wallet className="h-5 w-5" />}
+        />
+        <StatCard
+          title="Receitas do mês"
+          value={currencyBRL(receitasMes)}
+          tone="success"
+          icon={<ArrowUpRight className="h-5 w-5" />}
+        />
+        <StatCard
+          title="Despesas do mês"
+          value={currencyBRL(despesasMes)}
+          tone="danger"
+          trend={
+            mesAnterior && despesasAnterior
+              ? `${variacaoDespesas >= 0 ? '+' : ''}${variacaoDespesas.toFixed(1)}% vs. ${
+                  mesEmCurso ? 'mesmo período do mês anterior' : 'mês anterior'
+                }`
+              : undefined
+          }
+          trendPositive={variacaoDespesas <= 0}
+          icon={<ArrowDownRight className="h-5 w-5" />}
+        />
+        <StatCard
+          title="Resultado do mês"
+          value={currencyBRL(resultado)}
+          hint={`Taxa de poupança de ${taxaPoupanca.toFixed(1)}%`}
+          tone={resultado >= 0 ? 'success' : 'danger'}
+          icon={<PiggyBank className="h-5 w-5" />}
+        />
       </section>
+
+      {pendentes.length ? (
+        <div className="flex flex-col gap-3 rounded-2xl border border-gold-500/25 bg-gold-500/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-gold-100">
+            <strong>{pendentes.length}</strong> lançamento(s) pendente(s) somando{' '}
+            {currencyBRL(pendentes.reduce((sum, tx) => sum + tx.valor, 0))}.
+          </p>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/transacoes">Revisar pendências</Link>
+          </Button>
+        </div>
+      ) : null}
 
       <section className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-row items-start justify-between">
             <div>
               <CardTitle>Fluxo financeiro</CardTitle>
-              <CardDescription>Entradas vs saídas mensais</CardDescription>
+              <CardDescription>Entradas, saídas e resultado dos últimos meses</CardDescription>
             </div>
-            <Badge className="border-emerald-500/20 bg-emerald-500/10 text-emerald-300">+12.4%</Badge>
+            <Badge tone={resultado >= 0 ? 'success' : 'danger'}>
+              {resultado >= 0 ? 'Superávit' : 'Déficit'} {currencyBRL(Math.abs(resultado))}
+            </Badge>
           </CardHeader>
           <CardContent className="h-80 pt-0">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyFlow}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" vertical={false} />
-                <XAxis dataKey="name" stroke="#a1a1aa" />
-                <YAxis stroke="#a1a1aa" />
+              <BarChart data={fluxoMensal}>
+                <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
+                <XAxis dataKey="name" stroke={chartAxis} tickLine={false} axisLine={false} />
+                <YAxis stroke={chartAxis} tickLine={false} axisLine={false} width={52} tickFormatter={compactTick} />
                 <Tooltip
-                  contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: 12 }}
-                  formatter={(value: number) => currencyBRL(Number(value))}
+                  cursor={{ fill: 'rgba(212,175,55,0.06)' }}
+                  contentStyle={chartTooltipStyle}
+                  formatter={(value) => currencyBRL(Number(value))}
                 />
-                <Bar dataKey="receitas" radius={[8, 8, 0, 0]} fill="#10b981" />
-                <Bar dataKey="despesas" radius={[8, 8, 0, 0]} fill="#f43f5e" />
+                <Legend wrapperStyle={{ fontSize: 12, color: chartAxis }} />
+                <Bar name="Receitas" dataKey="receitas" radius={[8, 8, 0, 0]} fill={positiveColor} />
+                <Bar name="Despesas" dataKey="despesas" radius={[8, 8, 0, 0]} fill={negativeColor} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -96,92 +227,148 @@ export function DashboardView() {
         <Card>
           <CardHeader>
             <CardTitle>Distribuição de gastos</CardTitle>
-            <CardDescription>Despesas por categoria</CardDescription>
+            <CardDescription>
+              {maiorCategoria
+                ? `${maiorCategoria.name} lidera com ${currencyBRL(maiorCategoria.value)}`
+                : 'Despesas por categoria'}
+            </CardDescription>
           </CardHeader>
           <CardContent className="h-80 pt-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={despesasPorCategoria} innerRadius={52} outerRadius={90} paddingAngle={4} dataKey="value">
-                  {despesasPorCategoria.map((entry, index) => (
-                    <Cell key={entry.name} fill={entry.color || palette[index % palette.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => currencyBRL(Number(value))} />
-              </PieChart>
-            </ResponsiveContainer>
+            {despesasPorCategoria.length ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={despesasPorCategoria}
+                    innerRadius={52}
+                    outerRadius={90}
+                    paddingAngle={4}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {despesasPorCategoria.map((entry, index) => (
+                      <Cell key={entry.name} fill={entry.color || goldPalette[index % goldPalette.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip contentStyle={chartTooltipStyle} formatter={(value) => currencyBRL(Number(value))} />
+                  <Legend wrapperStyle={{ fontSize: 11, color: chartAxis }} />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-onyx-500">Sem despesas registradas neste mês.</p>
+            )}
           </CardContent>
         </Card>
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <Card>
-          <CardHeader>
-            <CardTitle>Últimas transações</CardTitle>
-            <CardDescription>Registro recente do extrato</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Últimas transações</CardTitle>
+              <CardDescription>Movimentos mais recentes do período</CardDescription>
+            </div>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/transacoes">Ver todas</Link>
+            </Button>
           </CardHeader>
           <CardContent className="space-y-3 pt-0">
-            {lastTransactions.map((tx) => {
+            {doMes.slice(0, 6).map((tx) => {
               const category = mockCategories.find((item) => item.id === tx.categoria_id);
-              const accent = tx.tipo === 'RECEITA' ? 'text-emerald-300' : 'text-rose-300';
+              const receita = tx.tipo === 'RECEITA';
               return (
-                <div key={tx.id} className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-3">
-                  <div>
-                    <p className="font-medium text-white">{tx.descricao}</p>
-                    <p className="text-xs text-zinc-400">{category?.nome} • {new Date(tx.data_transacao).toLocaleDateString('pt-BR')}</p>
+                <div
+                  key={tx.id}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-black/35 px-3 py-3 transition hover:border-gold-500/25"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-onyx-50">{tx.descricao}</p>
+                    <p className="truncate text-xs text-onyx-500">
+                      {category?.nome} • {new Date(tx.data_transacao).toLocaleDateString('pt-BR')}
+                    </p>
                   </div>
-                  <div className="text-right">
-                    <p className={accent}>{tx.tipo === 'RECEITA' ? '+' : '-'}{currencyBRL(tx.valor)}</p>
-                    <p className="text-xs text-zinc-400">{tx.status}</p>
+                  <div className="shrink-0 text-right">
+                    <p className={receita ? 'font-medium text-gold-200' : 'font-medium text-rose-300'}>
+                      {receita ? '+' : '-'}
+                      {currencyBRL(tx.valor)}
+                    </p>
+                    <p className="text-xs text-onyx-500">{tx.status}</p>
                   </div>
                 </div>
               );
             })}
+            {!doMes.length ? <p className="text-sm text-onyx-500">Nenhuma transação neste mês.</p> : null}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Assinaturas próximas</CardTitle>
-            <CardDescription>Próximos 7 dias</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3 pt-0">
-            {nextSubscriptions.map((subscription) => (
-              <div key={subscription.id} className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-3">
-                <div>
-                  <p className="font-medium text-white">{subscription.nome_servico}</p>
-                  <p className="flex items-center gap-2 text-xs text-zinc-400">
-                    <Clock3 className="h-3.5 w-3.5" /> vence dia {subscription.dia_vencimento}
-                  </p>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Assinaturas próximas</CardTitle>
+              <CardDescription>
+                {currencyBRL(totalComprometido)} comprometidos por mês
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 pt-0">
+              {proximasAssinaturas.map((subscription) => (
+                <div
+                  key={subscription.id}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-black/35 px-3 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-onyx-50">{subscription.nome_servico}</p>
+                    <p className="flex items-center gap-1.5 text-xs text-onyx-500">
+                      <Clock3 className="h-3.5 w-3.5" /> vence dia {subscription.dia_vencimento}
+                    </p>
+                  </div>
+                  <p className="shrink-0 text-sm font-medium text-rose-300">{currencyBRL(subscription.valor)}</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-rose-300">{currencyBRL(subscription.valor)}</p>
-                  <p className="text-xs text-zinc-400">ativo</p>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </section>
-    </div>
-  );
-}
+              ))}
+            </CardContent>
+          </Card>
 
-function StatCard({ title, value, tone, icon }: { title: string; value: string; tone: 'success' | 'danger' | 'neutral'; icon: React.ReactNode }) {
-  const toneClasses = {
-    success: 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300',
-    danger: 'border-rose-500/20 bg-rose-500/10 text-rose-300',
-    neutral: 'border-zinc-700 bg-zinc-800/80 text-zinc-100',
-  };
-
-  return (
-    <Card className={toneClasses[tone]}>
-      <CardContent className="flex items-center justify-between p-4">
-        <div>
-          <p className="text-sm text-zinc-400">{title}</p>
-          <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
+          <Card>
+            <CardHeader>
+              <CardTitle>Evolução do resultado</CardTitle>
+              <CardDescription>Receitas menos despesas por mês</CardDescription>
+            </CardHeader>
+            <CardContent className="h-48 pt-0">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={fluxoMensal}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
+                  <XAxis dataKey="name" stroke={chartAxis} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={chartTooltipStyle} formatter={(value) => currencyBRL(Number(value))} />
+                  <Line
+                    type="monotone"
+                    dataKey="saldo"
+                    stroke={positiveColor}
+                    strokeWidth={2.5}
+                    dot={{ r: 3, fill: positiveColor }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         </div>
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-950/60">{icon}</div>
-      </CardContent>
-    </Card>
+      </section>
+
+      <Card>
+        <CardContent className="flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-gold-500/25 bg-gold-500/10 text-gold-300">
+              <TrendingUp className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="font-medium text-onyx-50">Projeção para os próximos 12 meses</p>
+              <p className="text-sm text-onyx-400">
+                Mantendo o ritmo atual, o resultado acumulado seria de {currencyBRL(resultado * 12)}.
+              </p>
+            </div>
+          </div>
+          <Button asChild variant="outline">
+            <Link href="/assinaturas">Revisar recorrentes</Link>
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

@@ -80,3 +80,83 @@ create index if not exists idx_categorias_user_id on public.categorias(user_id);
 create index if not exists idx_assinaturas_user_id on public.assinaturas_planos(user_id);
 create index if not exists idx_transacoes_user_id on public.transacoes(user_id);
 create index if not exists idx_transacoes_data on public.transacoes(data_transacao desc);
+
+-- ============================================================================
+-- Perfis, papéis e auditoria
+-- ----------------------------------------------------------------------------
+-- Usado quando a autenticação migrar do arquivo local (.data/store.json) para
+-- o Supabase. O papel fica em `perfis.role` e é lido pelas policies abaixo.
+-- ============================================================================
+
+create type public.user_role as enum ('ADMIN', 'CLIENTE');
+create type public.user_status as enum ('ATIVO', 'SUSPENSO');
+create type public.user_plan as enum ('FREE', 'PRO', 'PREMIUM');
+
+create table public.perfis (
+  id uuid primary key references auth.users(id) on delete cascade,
+  username text not null unique,
+  nome text not null,
+  email text not null,
+  role public.user_role not null default 'CLIENTE',
+  status public.user_status not null default 'ATIVO',
+  plano public.user_plan not null default 'FREE',
+  created_at timestamptz not null default now(),
+  last_login_at timestamptz null
+);
+
+create table public.auditoria (
+  id uuid primary key default gen_random_uuid(),
+  action text not null,
+  actor text not null,
+  target uuid null,
+  detalhe text not null,
+  created_at timestamptz not null default now()
+);
+
+create table public.configuracoes (
+  id boolean primary key default true check (id),
+  nome_marca text not null default 'Lerich Cash',
+  moeda text not null default 'BRL',
+  permitir_cadastro_publico boolean not null default false,
+  limite_contas_por_cliente integer not null default 10 check (limite_contas_por_cliente between 1 and 100),
+  aviso_manutencao text not null default ''
+);
+
+insert into public.configuracoes (id) values (true) on conflict do nothing;
+
+alter table public.perfis enable row level security;
+alter table public.auditoria enable row level security;
+alter table public.configuracoes enable row level security;
+
+-- `security definer` evita recursão de policy ao consultar a própria tabela.
+create or replace function public.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.perfis
+    where id = auth.uid() and role = 'ADMIN' and status = 'ATIVO'
+  );
+$$;
+
+create policy "Perfil próprio visível" on public.perfis for select using (auth.uid() = id or public.is_admin());
+create policy "Perfil próprio editável" on public.perfis for update using (auth.uid() = id or public.is_admin()) with check (auth.uid() = id or public.is_admin());
+create policy "Admin cria perfis" on public.perfis for insert with check (public.is_admin());
+create policy "Admin remove perfis" on public.perfis for delete using (public.is_admin());
+
+create policy "Auditoria só para admin" on public.auditoria for select using (public.is_admin());
+create policy "Auditoria inserida pelo sistema" on public.auditoria for insert with check (auth.uid() is not null);
+
+create policy "Configurações visíveis a autenticados" on public.configuracoes for select using (auth.uid() is not null);
+create policy "Configurações editáveis por admin" on public.configuracoes for update using (public.is_admin()) with check (public.is_admin());
+
+-- Admins também enxergam os dados financeiros de qualquer cliente.
+create policy "Admin vê todas as contas" on public.contas for select using (public.is_admin());
+create policy "Admin vê todas as transações" on public.transacoes for select using (public.is_admin());
+create policy "Admin vê todas as assinaturas" on public.assinaturas_planos for select using (public.is_admin());
+
+create index if not exists idx_perfis_role on public.perfis(role);
+create index if not exists idx_auditoria_created_at on public.auditoria(created_at desc);

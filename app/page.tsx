@@ -1,5 +1,10 @@
 import { redirect } from 'next/navigation';
 
-export default function Page() {
-  redirect('/dashboard');
+import { getSession } from '@/lib/auth/server';
+
+export default async function Page() {
+  const session = await getSession();
+
+  if (!session) redirect('/login');
+  redirect(session.role === 'ADMIN' ? '/admin' : '/dashboard');
 }

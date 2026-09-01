@@ -66,3 +66,59 @@ export interface DashboardSummary {
   despesasMes: number;
   totalComprometido: number;
 }
+
+/* ---------- Autenticação, papéis e administração ---------- */
+
+export type UserRole = 'ADMIN' | 'CLIENTE';
+export type UserStatus = 'ATIVO' | 'SUSPENSO';
+export type UserPlan = 'FREE' | 'PRO' | 'PREMIUM';
+
+export interface AppUser {
+  id: string;
+  username: string;
+  nome: string;
+  email: string;
+  role: UserRole;
+  status: UserStatus;
+  plano: UserPlan;
+  created_at: string;
+  last_login_at: string | null;
+}
+
+/** Registro persistido: inclui o hash da senha, nunca exposto ao cliente. */
+export interface StoredUser extends AppUser {
+  password_hash: string;
+}
+
+export interface SessionUser {
+  id: string;
+  username: string;
+  nome: string;
+  role: UserRole;
+}
+
+export type AuditAction =
+  | 'LOGIN_OK'
+  | 'LOGIN_FALHA'
+  | 'LOGOUT'
+  | 'USUARIO_CRIADO'
+  | 'USUARIO_ATUALIZADO'
+  | 'USUARIO_REMOVIDO'
+  | 'SENHA_REDEFINIDA';
+
+export interface AuditLog {
+  id: string;
+  action: AuditAction;
+  actor: string;
+  target: string | null;
+  detalhe: string;
+  created_at: string;
+}
+
+export interface AppSettings {
+  nomeMarca: string;
+  moeda: string;
+  permitirCadastroPublico: boolean;
+  limiteContasPorCliente: number;
+  avisoManutencao: string;
+}

@@ -7,3 +7,10 @@ npm-debug.log*
 .env
 .env.local
 .env.*
+!.env.example
+
+# Dados locais de usuarios/auditoria (store em arquivo)
+.data/
+
+# Artefato incremental do TypeScript
+*.tsbuildinfo
