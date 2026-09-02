@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { cert, getApp, getApps, initializeApp, type App } from 'firebase-admin/app';
+import { cert, getApps, initializeApp, type App } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 
 import type { AppSettings, AuditLog, PasswordReset, StoredUser } from '@/types';
@@ -80,14 +80,24 @@ let firestore: Firestore | null = null;
 function conectar(credenciais: CredenciaisFirebase): Firestore {
   if (firestore) return firestore;
 
-  // Em desenvolvimento o Next recarrega o módulo; reaproveitar o app evita
-  // o erro de inicialização duplicada.
+  // O app do Firebase é global ao processo, mas em desenvolvimento o Next
+  // mantém instâncias separadas deste módulo por bundle. A segunda instância
+  // reaproveita o app já criado — e, nesse caso, não pode chamar `settings()`
+  // de novo, porque o Firestore só aceita essa chamada uma vez.
   const nome = 'lerich-finance';
   const existente = getApps().find((app) => app.name === nome);
   const app: App = existente ?? initializeApp({ credential: cert(credenciais) }, nome);
+  const db = getFirestore(app);
 
-  firestore = getFirestore(existente ? getApp(nome) : app);
-  firestore.settings({ ignoreUndefinedProperties: true });
+  if (!existente) {
+    try {
+      db.settings({ ignoreUndefinedProperties: true });
+    } catch {
+      // Outro módulo ganhou a corrida e já configurou; o valor é o mesmo.
+    }
+  }
+
+  firestore = db;
   return firestore;
 }
 
