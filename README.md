@@ -89,7 +89,7 @@ Na etapa de confirmação o endereço aparece parcialmente mascarado — `ma•�
 - **Dashboard** — seletor de mês, saldo consolidado, receitas/despesas, resultado e taxa de poupança, fluxo mensal, distribuição por categoria, evolução do resultado e alerta de pendências.
 - **Transações** — criar, editar, excluir e alternar status; busca, filtros, ordenação, paginação e exportação CSV.
 - **Assinaturas** — cadastrar, editar, pausar, remover e lançar no mês (sem duplicar); comprometimento mensal e vencimentos próximos.
-- **Contas** — cadastrar, editar e remover; saldo calculado do saldo inicial mais os lançamentos, com participação de cada conta.
+- **Saldo geral & Carteira** — cadastrar, editar e remover contas; saldo calculado do saldo inicial mais os lançamentos, com participação de cada uma.
 - **Importar extrato** — leitura de OFX e CSV, conciliação lançamento a lançamento e gravação em lote.
 - **Meu perfil** — dados da conta e troca de senha.
 

@@ -144,10 +144,10 @@ export function TransactionsView({ dados }: { dados: DadosFinanceiros }) {
       <EmptyState
         icone={<ReceiptText className="h-6 w-6" />}
         titulo="Cadastre uma conta primeiro"
-        descricao="Toda transação pertence a uma conta. Crie a primeira em Contas e volte aqui."
+        descricao="Toda transação pertence a uma conta. Crie a primeira em Saldo geral & Carteira e volte aqui."
         acao={
           <Button asChild>
-            <a href="/contas">Ir para Contas</a>
+            <a href="/contas">Ir para Saldo geral</a>
           </Button>
         }
       />

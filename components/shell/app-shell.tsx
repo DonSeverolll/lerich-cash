@@ -37,7 +37,12 @@ const clientNav: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, description: 'Visão geral do mês' },
   { href: '/transacoes', label: 'Transações', icon: ReceiptText, description: 'Receitas e despesas' },
   { href: '/assinaturas', label: 'Assinaturas', icon: CreditCard, description: 'Gastos recorrentes' },
-  { href: '/contas', label: 'Contas', icon: Landmark, description: 'Bancos e carteiras' },
+  {
+    href: '/contas',
+    label: 'Saldo geral & Carteira',
+    icon: Landmark,
+    description: 'Bancos, carteiras e saldo consolidado',
+  },
   { href: '/importar', label: 'Importar extrato', icon: ArrowUpRight, description: 'OFX e CSV' },
 ];
 

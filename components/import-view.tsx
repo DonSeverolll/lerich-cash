@@ -122,7 +122,7 @@ export function ImportView({ contas, categorias }: { contas: Account[]; categori
         descricao="Os lançamentos importados precisam ser atribuídos a uma conta."
         acao={
           <Button asChild>
-            <a href="/contas">Ir para Contas</a>
+            <a href="/contas">Ir para Saldo geral</a>
           </Button>
         }
       />

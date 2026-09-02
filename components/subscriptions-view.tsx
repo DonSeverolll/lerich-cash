@@ -104,10 +104,10 @@ export function SubscriptionsView({ dados }: { dados: DadosFinanceiros }) {
       <EmptyState
         icone={<CreditCard className="h-6 w-6" />}
         titulo="Cadastre uma conta primeiro"
-        descricao="Cada assinatura é debitada de uma conta. Crie a primeira em Contas."
+        descricao="Cada assinatura é debitada de uma conta. Crie a primeira em Saldo geral & Carteira."
         acao={
           <Button asChild>
-            <a href="/contas">Ir para Contas</a>
+            <a href="/contas">Ir para Saldo geral</a>
           </Button>
         }
       />
