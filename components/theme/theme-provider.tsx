@@ -21,8 +21,8 @@ const Contexto = createContext<ContextoTema | null>(null);
  * ciclo é bem mais rápido. A troca de tema é uma ação pedida pelo usuário, não
  * um movimento ambiente, por isso ela continua tendo um retorno visual.
  */
-const DURACAO_MS = 780;
-const DURACAO_REDUZIDA_MS = 260;
+const DURACAO_MS = 1170;
+const DURACAO_REDUZIDA_MS = 390;
 
 /*
   O atributo `data-tema` do <html> é a fonte da verdade: o script inline do

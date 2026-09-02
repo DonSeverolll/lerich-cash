@@ -11,8 +11,8 @@ export const BRAND_NAME = 'Lerich Finance';
  * cai em pontos diferentes — e o brilho precisa de tamanhos diferentes para
  * cobrir a mesma área física.
  */
-const OLHO_MARCA = { '--eye-x': '80.1%', '--eye-y': '17.2%', '--eye-size': '19%' } as CSSProperties;
-const OLHO_LOCKUP = { '--eye-x': '64.3%', '--eye-y': '12.1%', '--eye-size': '8%' } as CSSProperties;
+const OLHO_MARCA = { '--eye-x': '80.1%', '--eye-y': '17.2%', '--eye-size': '30%' } as CSSProperties;
+const OLHO_LOCKUP = { '--eye-x': '64.3%', '--eye-y': '12.1%', '--eye-size': '13%' } as CSSProperties;
 
 /*
   Cada marca tem duas artes: a dourada, para o fundo escuro, e a prateada, para
