@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { ShieldCheck, TrendingUp, Wallet } from 'lucide-react';
 
 import { BrandLockup } from '@/components/brand/logo';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 
 const highlights = [
   { icon: Wallet, title: 'Fluxo consolidado', text: 'Todas as contas e cartões em um só extrato.' },
@@ -13,12 +14,16 @@ const highlights = [
 export function AuthShell({ children }: { children: ReactNode }) {
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10">
-      <div className="pointer-events-none absolute inset-0 opacity-70 [background:radial-gradient(600px_circle_at_20%_20%,rgba(212,175,55,0.16),transparent_60%)]" />
+      <div className="absolute right-4 top-4 z-10">
+        <ThemeToggle />
+      </div>
+
+      <div className="pointer-events-none absolute inset-0 opacity-70 [background:radial-gradient(600px_circle_at_20%_20%,rgb(var(--gold-500)/0.16),transparent_60%)]" />
 
       <div className="relative grid w-full max-w-5xl gap-10 lg:grid-cols-[1.05fr_0.95fr]">
         <section className="hidden flex-col justify-center lg:flex">
           <h1 className="sr-only">Lerich Finance</h1>
-          <BrandLockup width={340} className="drop-shadow-[0_0_40px_rgba(212,175,55,0.25)]" />
+          <BrandLockup width={340} className="drop-shadow-[0_0_40px_rgb(var(--gold-500)/0.25)]" />
           <div className="gold-rule my-7 max-w-sm" />
           <p className="max-w-md text-onyx-300">
             Gestão financeira com padrão de private banking: preto, dourado e informação no lugar certo.

@@ -14,7 +14,14 @@ export const BRAND_NAME = 'Lerich Finance';
 const OLHO_MARCA = { '--eye-x': '80.1%', '--eye-y': '17.2%', '--eye-size': '19%' } as CSSProperties;
 const OLHO_LOCKUP = { '--eye-x': '64.3%', '--eye-y': '12.1%', '--eye-size': '8%' } as CSSProperties;
 
-/** Símbolo (dragão) isolado — usado em ícones, sidebar e avatares da marca. */
+/*
+  Cada marca tem duas artes: a dourada, para o fundo escuro, e a prateada, para
+  o fundo claro — no claro o dourado desbota e a palavra "LERICH", que é branca
+  na arte original, desapareceria. As duas ficam no HTML e o CSS mostra a certa
+  conforme `data-tema`; assim a troca é instantânea e a marca continua sendo um
+  componente de servidor.
+*/
+
 export function BrandMark({ size = 40, className }: { size?: number; className?: string }) {
   return (
     <span className={cn('brand-logo', className)} style={{ width: size, height: size }}>
@@ -25,7 +32,16 @@ export function BrandMark({ size = 40, className }: { size?: number; className?:
         width={size}
         height={size}
         priority
-        className="select-none object-contain"
+        className="brand-arte brand-arte--escuro select-none object-contain"
+      />
+      <Image
+        src="/mark-lerich-finance-claro.png"
+        alt=""
+        aria-hidden
+        width={size}
+        height={size}
+        priority
+        className="brand-arte brand-arte--claro select-none object-contain"
       />
       <span className="brand-eye" style={OLHO_MARCA} aria-hidden />
     </span>
@@ -44,7 +60,16 @@ export function BrandLockup({ width = 280, className }: { width?: number; classN
         width={width}
         height={height}
         priority
-        className="select-none object-contain"
+        className="brand-arte brand-arte--escuro select-none object-contain"
+      />
+      <Image
+        src="/logo-lerich-finance-claro.png"
+        alt=""
+        aria-hidden
+        width={width}
+        height={height}
+        priority
+        className="brand-arte brand-arte--claro select-none object-contain"
       />
       <span className="brand-eye" style={OLHO_LOCKUP} aria-hidden />
     </span>

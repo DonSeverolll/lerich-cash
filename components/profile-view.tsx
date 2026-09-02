@@ -66,8 +66,8 @@ export function ProfileView({ session, email, plano, criadoEm, ultimoAcesso }: P
           <CardDescription>Informações do seu acesso ao Lerich Finance</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 pt-0">
-          <div className="flex items-center gap-4 rounded-2xl border border-gold-500/15 bg-black/40 p-4">
-            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-b from-gold-300 to-gold-600 text-lg font-semibold text-black">
+          <div className="flex items-center gap-4 rounded-2xl border border-gold-500/15 bg-onyx-950/40 p-4">
+            <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-b from-gold-300 to-gold-600 text-lg font-semibold text-acento">
               {session.nome.slice(0, 1).toUpperCase()}
             </span>
             <div className="min-w-0">
@@ -158,7 +158,7 @@ export function ProfileView({ session, email, plano, criadoEm, ultimoAcesso }: P
 
 function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-white/5 bg-black/30 px-3 py-2.5">
+    <div className="flex items-center justify-between gap-4 rounded-xl border border-onyx-50/5 bg-onyx-950/30 px-3 py-2.5">
       <span className="flex items-center gap-2 text-sm text-onyx-400">
         <span className="text-gold-500/80">{icon}</span>
         {label}

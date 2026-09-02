@@ -24,6 +24,7 @@ import type { SessionUser } from '@/types';
 import { cn, monthLabel } from '@/lib/utils';
 import { BRAND_NAME, BrandMark, BrandWordmark } from '@/components/brand/logo';
 import { UserMenu } from '@/components/shell/user-menu';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 
 interface NavItem {
   href: string;
@@ -78,7 +79,7 @@ export function AppShell({ variant, user, children, headerSlot }: AppShellProps)
     <div className="min-h-screen">
       <div className="mx-auto flex max-w-[1400px] gap-6 px-4 py-5 md:px-6 xl:px-8">
         {/* ----- Sidebar (desktop) ----- */}
-        <aside className="sticky top-5 hidden h-[calc(100vh-2.5rem)] w-72 shrink-0 flex-col rounded-2xl border border-gold-500/15 bg-black/60 p-4 backdrop-blur lg:flex">
+        <aside className="sticky top-5 hidden h-[calc(100vh-2.5rem)] w-72 shrink-0 flex-col rounded-2xl border border-gold-500/15 bg-onyx-950/60 p-4 backdrop-blur lg:flex">
           <Brand variant={variant} />
           <Nav items={navigation} pathname={pathname} />
           <SidebarFooter variant={variant} />
@@ -92,7 +93,7 @@ export function AppShell({ variant, user, children, headerSlot }: AppShellProps)
             z-index aqui, o conteúdo da página — que vem depois no DOM — pinta
             por cima do menu aberto.
           */}
-          <header className="relative z-30 mb-6 flex flex-col gap-4 rounded-2xl border border-gold-500/15 bg-black/50 p-4 backdrop-blur md:flex-row md:items-center md:justify-between">
+          <header className="relative z-30 mb-6 flex flex-col gap-4 rounded-2xl border border-gold-500/15 bg-onyx-950/50 p-4 backdrop-blur md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -114,7 +115,8 @@ export function AppShell({ variant, user, children, headerSlot }: AppShellProps)
 
             <div className="flex items-center gap-3">
               {headerSlot}
-              <span className="hidden items-center gap-2 rounded-xl border border-gold-500/20 bg-black/50 px-3 py-2 text-sm capitalize text-onyx-200 sm:inline-flex">
+              <ThemeToggle />
+              <span className="hidden items-center gap-2 rounded-xl border border-gold-500/20 bg-onyx-950/50 px-3 py-2 text-sm capitalize text-onyx-200 sm:inline-flex">
                 <Wallet className="h-4 w-4 text-gold-400" />
                 {monthLabel(new Date())}
               </span>
@@ -133,7 +135,7 @@ export function AppShell({ variant, user, children, headerSlot }: AppShellProps)
             type="button"
             aria-label="Fechar menu"
             onClick={() => setMobileOpen(false)}
-            className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+            className="absolute inset-0 bg-onyx-950/75 backdrop-blur-sm"
           />
           <div className="absolute inset-y-0 left-0 flex w-[82%] max-w-xs flex-col border-r border-gold-500/20 bg-onyx-950 p-4">
             <div className="mb-2 flex items-start justify-between">
@@ -163,7 +165,7 @@ function Brand({ variant }: { variant: 'client' | 'admin' }) {
       className="mb-8 flex items-center gap-3 px-2"
       aria-label={`${BRAND_NAME} — ir para o painel`}
     >
-      <BrandMark size={44} className="h-11 w-11 drop-shadow-[0_0_14px_rgba(212,175,55,0.35)]" />
+      <BrandMark size={44} className="h-11 w-11 drop-shadow-[0_0_14px_rgb(var(--gold-500)/0.35)]" />
       <span className="min-w-0">
         <BrandWordmark className="block truncate text-base" />
         <span className="block text-[10px] uppercase tracking-[0.28em] text-gold-500/70">
@@ -197,7 +199,7 @@ function Nav({
               'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition',
               active
                 ? 'border border-gold-500/30 bg-gold-500/10 text-gold-100'
-                : 'border border-transparent text-onyx-300 hover:border-white/5 hover:bg-white/5 hover:text-onyx-50',
+                : 'border border-transparent text-onyx-300 hover:border-onyx-50/5 hover:bg-onyx-50/5 hover:text-onyx-50',
             )}
           >
             <Icon className={cn('h-4 w-4 transition', active ? 'text-gold-300' : 'text-onyx-400 group-hover:text-gold-300')} />

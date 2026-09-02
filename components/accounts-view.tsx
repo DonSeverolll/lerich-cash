@@ -173,7 +173,7 @@ export function AccountsView({ dados }: { dados: DadosFinanceiros }) {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <div className="mr-3 h-1.5 flex-1 overflow-hidden rounded-full bg-white/5">
+                    <div className="mr-3 h-1.5 flex-1 overflow-hidden rounded-full bg-onyx-50/5">
                       <div
                         className="h-full rounded-full"
                         style={{
@@ -186,11 +186,11 @@ export function AccountsView({ dados }: { dados: DadosFinanceiros }) {
                   </div>
 
                   <dl className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="rounded-xl border border-white/5 bg-black/30 px-3 py-2">
+                    <div className="rounded-xl border border-onyx-50/5 bg-onyx-950/30 px-3 py-2">
                       <dt className="text-xs text-onyx-500">Entradas</dt>
                       <dd className="mt-0.5 font-medium text-gold-200">{currencyBRL(conta.entradas)}</dd>
                     </div>
-                    <div className="rounded-xl border border-white/5 bg-black/30 px-3 py-2">
+                    <div className="rounded-xl border border-onyx-50/5 bg-onyx-950/30 px-3 py-2">
                       <dt className="text-xs text-onyx-500">Saídas</dt>
                       <dd className="mt-0.5 font-medium text-rose-300">{currencyBRL(conta.saidas)}</dd>
                     </div>
@@ -278,10 +278,10 @@ function SeletorDePrioridade({ valorInicial }: { valorInicial?: string }) {
               aria-pressed={selecionada}
               title={`${prioridade.nome} — ${prioridade.descricao}`}
               className={cn(
-                'flex h-11 flex-1 items-end justify-center rounded-xl border pb-1.5 text-[10px] font-semibold text-black/70 transition',
+                'flex h-11 flex-1 items-end justify-center rounded-xl border pb-1.5 text-[10px] font-semibold text-acento/70 transition',
                 selecionada
-                  ? 'border-white/70 ring-2 ring-white/50'
-                  : 'border-white/10 opacity-70 hover:opacity-100',
+                  ? 'border-onyx-50/70 ring-2 ring-onyx-50/50'
+                  : 'border-onyx-50/10 opacity-70 hover:opacity-100',
               )}
               style={{ backgroundColor: prioridade.cor }}
             >

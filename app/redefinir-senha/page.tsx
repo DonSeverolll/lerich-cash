@@ -34,7 +34,7 @@ export default async function ResetPasswordPage({
       {verificacao.ok ? (
         <ResetPasswordForm token={token as string} nome={verificacao.user.nome.split(' ')[0] ?? ''} />
       ) : (
-        <Card className="animate-fade-up border-gold-500/20 bg-black/70 backdrop-blur">
+        <Card className="animate-fade-up border-gold-500/20 bg-onyx-950/70 backdrop-blur">
           <CardContent className="p-7">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-200">
               <TriangleAlert className="h-7 w-7" />

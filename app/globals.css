@@ -2,13 +2,130 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/*
+  ============================================================================
+  Paleta em variáveis
+  ----------------------------------------------------------------------------
+  Cada variável guarda só os canais RGB, o que permite ao Tailwind aplicar
+  opacidade (`border-gold-500/20`). A escala clara é a escura invertida: o que
+  era o tom mais claro passa a ser o mais escuro. Assim `text-onyx-50`
+  continua sendo "texto de maior contraste" e `bg-onyx-950` continua sendo
+  "fundo", sem precisar mexer em nenhum componente.
+  ============================================================================
+*/
+
+:root,
+[data-tema='escuro'] {
   color-scheme: dark;
+
   --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-display: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
-  --gold: #d4af37;
-  --gold-soft: rgba(212, 175, 55, 0.12);
-  --gold-line: rgba(212, 175, 55, 0.18);
+
+  /* Acento: dourado */
+  --gold-50: 253 249 236;
+  --gold-100: 250 240 207;
+  --gold-200: 242 224 160;
+  --gold-300: 233 203 109;
+  --gold-400: 220 182 72;
+  --gold-500: 212 175 55;
+  --gold-600: 184 145 42;
+  --gold-700: 147 110 35;
+  --gold-800: 121 89 36;
+  --gold-900: 103 75 36;
+
+  /* Neutros: do claro (texto) ao escuro (fundo) */
+  --onyx-50: 246 246 246;
+  --onyx-100: 231 231 231;
+  --onyx-200: 209 209 209;
+  --onyx-300: 176 176 176;
+  --onyx-400: 136 136 136;
+  --onyx-500: 109 109 109;
+  --onyx-600: 93 93 93;
+  --onyx-700: 79 79 79;
+  --onyx-800: 26 24 20;
+  --onyx-900: 18 16 12;
+  --onyx-950: 5 5 5;
+
+  --fundo: 5 5 5;
+  --texto: 246 241 228;
+  --borda: 36 31 20;
+  --campo: 13 11 7;
+  --sombra: 0 0 0;
+
+  /* Texto que fica sobre o acento cheio (botão primário, avatar) */
+  --acento-texto: 5 5 5;
+
+  /* Superfície dos cartões e trilho da barra de rolagem */
+  --superficie-de: 26 24 20;
+  --superficie-para: 9 8 6;
+  --superficie-opacidade: 0.92;
+  --trilho: 10 9 8;
+
+  /* Acabamento metálico do texto da marca */
+  --metal-1: #f2e0a0;
+  --metal-2: #d4af37;
+  --metal-3: #8f6f1f;
+  --metal-4: #e9cb6d;
+
+  /* Brilho do olho do dragão */
+  --olho-1: rgba(255, 252, 240, 0.95);
+  --olho-2: rgba(255, 232, 160, 0.75);
+  --olho-3: rgba(212, 175, 55, 0.4);
+}
+
+/*
+  Tema claro: fundos claros e o acento vira um prateado escuro reluzente —
+  precisa ser escuro para manter contraste sobre o branco.
+*/
+[data-tema='claro'] {
+  color-scheme: light;
+
+  --gold-50: 41 47 55;
+  --gold-100: 52 59 68;
+  --gold-200: 65 73 83;
+  --gold-300: 82 91 102;
+  --gold-400: 100 110 122;
+  --gold-500: 120 130 142;
+  --gold-600: 146 155 166;
+  --gold-700: 176 183 192;
+  --gold-800: 205 210 217;
+  --gold-900: 227 231 235;
+
+  --onyx-50: 18 21 26;
+  --onyx-100: 30 34 41;
+  --onyx-200: 51 57 66;
+  --onyx-300: 74 82 92;
+  --onyx-400: 98 107 118;
+  --onyx-500: 123 132 143;
+  --onyx-600: 152 161 171;
+  --onyx-700: 190 196 203;
+  --onyx-800: 226 230 235;
+  --onyx-900: 240 242 245;
+  --onyx-950: 249 250 251;
+
+  --fundo: 244 246 248;
+  --texto: 22 26 32;
+  --borda: 208 214 221;
+  --campo: 255 255 255;
+  --sombra: 90 100 115;
+
+  --acento-texto: 255 255 255;
+
+  --superficie-de: 255 255 255;
+  --superficie-para: 240 242 246;
+  --superficie-opacidade: 0.9;
+  --trilho: 232 235 240;
+
+  --metal-1: #8e98a4;
+  --metal-2: #4a535e;
+  --metal-3: #2b323b;
+  --metal-4: #737e8b;
+
+  /* Sobre a arte prateada o brilho precisa somar contraste escurecendo. */
+  --olho-mistura: multiply;
+  --olho-1: rgba(255, 255, 255, 0.9);
+  --olho-2: rgba(120, 132, 146, 0.55);
+  --olho-3: rgba(40, 47, 56, 0.5);
 }
 
 /*
@@ -17,24 +134,23 @@
 */
 html {
   background:
-    radial-gradient(1100px circle at 15% -10%, rgba(212, 175, 55, 0.14), transparent 55%),
-    radial-gradient(900px circle at 110% 10%, rgba(212, 175, 55, 0.07), transparent 50%),
-    linear-gradient(180deg, #050505 0%, #0b0a07 55%, #050505 100%);
+    radial-gradient(1100px circle at 15% -10%, rgb(var(--gold-500) / 0.14), transparent 55%),
+    radial-gradient(900px circle at 110% 10%, rgb(var(--gold-500) / 0.07), transparent 50%),
+    linear-gradient(180deg, rgb(var(--fundo)) 0%, rgb(var(--onyx-900)) 55%, rgb(var(--fundo)) 100%);
   background-attachment: fixed;
 }
 
 body {
   min-height: 100vh;
   background: transparent;
-  color: #f6f1e4;
+  color: rgb(var(--texto));
   font-family: var(--font-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
 /*
-  Feixe de luz dourada: uma faixa larga e diagonal atravessando a tela.
-  Fica fixo, não captura cliques e respira devagar. As paradas do gradiente
-  são todas translúcidas, então o texto por cima continua legível.
+  Feixe metálico: uma faixa estreita que atravessa a tela de ponta a ponta.
+  Fica fixo, não captura cliques e some entre as passagens.
 */
 body::before {
   content: '';
@@ -63,11 +179,11 @@ body::before {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(212, 175, 55, 0.03) 22%,
-    rgba(233, 203, 109, 0.08) 40%,
-    rgba(250, 232, 170, 0.14) 50%,
-    rgba(233, 203, 109, 0.075) 60%,
-    rgba(212, 175, 55, 0.028) 78%,
+    rgb(var(--gold-500) / 0.03) 22%,
+    rgb(var(--gold-300) / 0.08) 40%,
+    rgb(var(--gold-200) / 0.14) 50%,
+    rgb(var(--gold-300) / 0.075) 60%,
+    rgb(var(--gold-500) / 0.028) 78%,
     transparent 100%
   );
   animation: feixe-dourado 9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
@@ -96,14 +212,13 @@ body::before {
   }
 }
 
-
 * {
   box-sizing: border-box;
 }
 
 ::selection {
-  background: rgba(212, 175, 55, 0.3);
-  color: #fff;
+  background: rgb(var(--gold-500) / 0.3);
+  color: rgb(var(--onyx-50));
 }
 
 ::-webkit-scrollbar {
@@ -112,38 +227,109 @@ body::before {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0a0908;
+  background: rgb(var(--trilho));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.28);
+  background: rgb(var(--gold-500) / 0.28);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.45);
+  background: rgb(var(--gold-500) / 0.45);
 }
 
-/* Texto com acabamento metálico dourado */
+/* Texto com acabamento metálico — dourado no escuro, prateado no claro */
 .text-gold-gradient {
-  background: linear-gradient(100deg, #f2e0a0 0%, #d4af37 42%, #8f6f1f 68%, #e9cb6d 100%);
+  background: linear-gradient(
+    100deg,
+    var(--metal-1) 0%,
+    var(--metal-2) 42%,
+    var(--metal-3) 68%,
+    var(--metal-4) 100%
+  );
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-/* Filete dourado usado como divisor */
+/* Filete metálico usado como divisor */
 .gold-rule {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.55), transparent);
+  background: linear-gradient(90deg, transparent, rgb(var(--gold-500) / 0.55), transparent);
 }
 
 .surface {
-  background: linear-gradient(160deg, rgba(26, 24, 20, 0.92) 0%, rgba(9, 8, 6, 0.92) 100%);
+  background: linear-gradient(
+    160deg,
+    rgb(var(--superficie-de) / var(--superficie-opacidade)) 0%,
+    rgb(var(--superficie-para) / var(--superficie-opacidade)) 100%
+  );
+}
+
+/* Texto que fica sobre o acento cheio (botão primário, avatar da marca) */
+.text-acento {
+  color: rgb(var(--acento-texto));
 }
 
 /*
-  Marca: o olho do dragão dá uma cintilada curta a cada 10 segundos.
+  ============================================================================
+  Transição entre os temas
+  ----------------------------------------------------------------------------
+  Uma cortina metálica atravessa a tela da direita para a esquerda; a troca de
+  paleta acontece quando ela cobre o conteúdo, então nunca se vê o corte.
+  ============================================================================
+*/
+.cortina-tema {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  will-change: transform;
+  animation: cortina-tema 780ms cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+/* Do preto e dourado para o branco e prateado, ao longo da faixa. */
+.cortina-tema[data-para='claro'] {
+  background: linear-gradient(
+    100deg,
+    #050505 0%,
+    #1a1814 14%,
+    #d4af37 34%,
+    #f2e0a0 46%,
+    #ffffff 60%,
+    #e6eaef 74%,
+    #8e98a4 88%,
+    #4a535e 100%
+  );
+}
+
+/* E o caminho inverso quando volta para o modo noturno. */
+.cortina-tema[data-para='escuro'] {
+  background: linear-gradient(
+    100deg,
+    #4a535e 0%,
+    #8e98a4 12%,
+    #e6eaef 26%,
+    #ffffff 40%,
+    #f2e0a0 54%,
+    #d4af37 66%,
+    #1a1814 86%,
+    #050505 100%
+  );
+}
+
+@keyframes cortina-tema {
+  from {
+    transform: translate3d(100%, 0, 0);
+  }
+  to {
+    transform: translate3d(-100%, 0, 0);
+  }
+}
+
+/*
+  Marca: o olho do dragão dá uma cintilada curta a cada 5 segundos.
   O logotipo é um PNG, então o brilho é uma camada sobreposta, posicionada
   em porcentagem sobre a pupila — as coordenadas mudam entre o símbolo e o
   lockup, por isso vêm em variáveis.
@@ -154,6 +340,20 @@ body::before {
   line-height: 0;
 }
 
+/*
+  As duas artes da marca ocupam o mesmo lugar; só uma aparece por tema. A
+  segunda fica posicionada em cima da primeira para não empurrar o layout.
+*/
+.brand-arte + .brand-arte {
+  position: absolute;
+  inset: 0;
+}
+
+[data-tema='escuro'] .brand-arte--claro,
+[data-tema='claro'] .brand-arte--escuro {
+  display: none;
+}
+
 .brand-eye {
   position: absolute;
   left: var(--eye-x);
@@ -162,7 +362,7 @@ body::before {
   aspect-ratio: 1;
   border-radius: 9999px;
   pointer-events: none;
-  mix-blend-mode: screen;
+  mix-blend-mode: var(--olho-mistura, screen);
   opacity: 0;
   /*
     `translate` e `scale` separados do `transform`: assim a centralização
@@ -173,9 +373,9 @@ body::before {
   scale: 0.55;
   background: radial-gradient(
     circle,
-    rgba(255, 252, 240, 0.95) 0%,
-    rgba(255, 232, 160, 0.75) 28%,
-    rgba(212, 175, 55, 0.4) 55%,
+    var(--olho-1) 0%,
+    var(--olho-2) 28%,
+    var(--olho-3) 55%,
     transparent 72%
   );
   animation: cintilar-olho 5s ease-in-out infinite;
@@ -210,7 +410,6 @@ body::before {
   }
 }
 
-/* Quem pediu menos movimento ao sistema não recebe a piscada do olho. */
 @media (prefers-reduced-motion: reduce) {
   /* O feixe atravessa a tela inteira — sob "reduzir movimento" ele para,
      mas continua visível. */
@@ -227,6 +426,11 @@ body::before {
     scale: 1;
     animation: cintilar-olho-suave 5s ease-in-out infinite;
   }
+
+  /* A cortina vira um clarão curto, sem varredura. */
+  .cortina-tema {
+    animation: cortina-tema-suave 260ms ease-out forwards;
+  }
 }
 
 @keyframes cintilar-olho-suave {
@@ -239,6 +443,15 @@ body::before {
   }
   96%,
   100% {
+    opacity: 0;
+  }
+}
+
+@keyframes cortina-tema-suave {
+  from {
+    opacity: 0.85;
+  }
+  to {
     opacity: 0;
   }
 }

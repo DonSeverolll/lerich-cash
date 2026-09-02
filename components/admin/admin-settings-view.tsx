@@ -112,7 +112,7 @@ export function AdminSettingsView({
               />
             </div>
 
-            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-gold-500/15 bg-black/35 p-4">
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-gold-500/15 bg-onyx-950/35 p-4">
               <input
                 type="checkbox"
                 checked={settings.permitirCadastroPublico}
@@ -189,7 +189,7 @@ export function AdminSettingsView({
 
 function Item({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-white/5 bg-black/30 p-3.5">
+    <div className="rounded-xl border border-onyx-50/5 bg-onyx-950/30 p-3.5">
       <p className="flex items-center gap-2 font-medium text-onyx-100">
         <span className="text-gold-400">{icon}</span>
         {title}

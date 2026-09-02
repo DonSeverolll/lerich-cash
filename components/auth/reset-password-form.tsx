@@ -55,7 +55,7 @@ export function ResetPasswordForm({ token, nome }: { token: string; nome: string
   }
 
   return (
-    <Card className="animate-fade-up border-gold-500/20 bg-black/70 backdrop-blur">
+    <Card className="animate-fade-up border-gold-500/20 bg-onyx-950/70 backdrop-blur">
       <CardContent className="p-7">
         <div className="mb-7 lg:hidden">
           <BrandLockup width={190} />

@@ -1,45 +1,33 @@
 import type { Config } from 'tailwindcss';
 
+/**
+ * As cores apontam para variáveis CSS que guardam apenas os canais RGB
+ * (`212 175 55`). Isso permite que o Tailwind continue aplicando opacidade
+ * (`border-gold-500/20`) e, ao mesmo tempo, que o tema claro redefina a
+ * paleta inteira em `globals.css` sem tocar em nenhum componente.
+ */
+const canal = (nome: string) => `rgb(var(--${nome}) / <alpha-value>)`;
+
+const escala = (prefixo: string, tons: number[]) =>
+  Object.fromEntries(tons.map((tom) => [tom, canal(`${prefixo}-${tom}`)]));
+
 const config: Config = {
   darkMode: ['class'],
   content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}', './lib/**/*.{ts,tsx}', './types/**/*.{ts,tsx}'],
   theme: {
     extend: {
       boxShadow: {
-        soft: '0 0 0 1px rgba(212,175,55,0.08), 0 18px 48px rgba(0,0,0,0.65)',
-        gold: '0 10px 30px -10px rgba(212,175,55,0.45)',
+        soft: '0 0 0 1px rgb(var(--gold-500) / 0.08), 0 18px 48px rgb(var(--sombra) / 0.65)',
+        gold: '0 10px 30px -10px rgb(var(--gold-500) / 0.45)',
       },
       colors: {
-        border: '#241f14',
-        input: '#0d0b07',
-        ring: '#d4af37',
-        background: '#050505',
-        foreground: '#f6f1e4',
-        gold: {
-          50: '#fdf9ec',
-          100: '#faf0cf',
-          200: '#f2e0a0',
-          300: '#e9cb6d',
-          400: '#dcb648',
-          500: '#d4af37',
-          600: '#b8912a',
-          700: '#936e23',
-          800: '#795924',
-          900: '#674b24',
-        },
-        onyx: {
-          50: '#f6f6f6',
-          100: '#e7e7e7',
-          200: '#d1d1d1',
-          300: '#b0b0b0',
-          400: '#888888',
-          500: '#6d6d6d',
-          600: '#5d5d5d',
-          700: '#4f4f4f',
-          800: '#1a1814',
-          900: '#12100c',
-          950: '#050505',
-        },
+        border: canal('borda'),
+        input: canal('campo'),
+        ring: canal('gold-500'),
+        background: canal('fundo'),
+        foreground: canal('texto'),
+        gold: escala('gold', [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]),
+        onyx: escala('onyx', [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]),
       },
       borderRadius: {
         xl: '1rem',

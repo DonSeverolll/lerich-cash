@@ -108,7 +108,7 @@ export function AdminAuditView({ logs }: { logs: AuditLog[] }) {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-gold-500/15 bg-black/40 text-xs uppercase tracking-wider text-onyx-500">
+              <thead className="border-b border-gold-500/15 bg-onyx-950/40 text-xs uppercase tracking-wider text-onyx-500">
                 <tr>
                   <th className="px-5 py-3 font-medium">Data e hora</th>
                   <th className="px-5 py-3 font-medium">Ação</th>
@@ -118,7 +118,7 @@ export function AdminAuditView({ logs }: { logs: AuditLog[] }) {
               </thead>
               <tbody>
                 {filtered.map((log) => (
-                  <tr key={log.id} className="border-b border-white/5 last:border-0">
+                  <tr key={log.id} className="border-b border-onyx-50/5 last:border-0">
                     <td className="whitespace-nowrap px-5 py-3.5 text-onyx-300">
                       {new Date(log.created_at).toLocaleString('pt-BR')}
                     </td>

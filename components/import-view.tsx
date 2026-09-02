@@ -141,7 +141,7 @@ export function ImportView({ contas, categorias }: { contas: Account[]; categori
         <CardContent className="pt-0">
           <div
             className={`rounded-2xl border-2 border-dashed p-8 text-center transition ${
-              isDragging ? 'border-gold-400 bg-gold-500/10' : 'border-gold-500/20 bg-black/40'
+              isDragging ? 'border-gold-400 bg-gold-500/10' : 'border-gold-500/20 bg-onyx-950/40'
             }`}
             onDragOver={(event) => {
               event.preventDefault();
@@ -211,11 +211,11 @@ export function ImportView({ contas, categorias }: { contas: Account[]; categori
                 <div
                   key={item.id}
                   className={`flex flex-col gap-3 rounded-xl border px-3 py-3 transition lg:flex-row lg:items-center lg:justify-between ${
-                    aprovado ? 'border-gold-500/25 bg-black/40' : 'border-white/5 bg-black/20 opacity-70'
+                    aprovado ? 'border-gold-500/25 bg-onyx-950/40' : 'border-onyx-50/5 bg-onyx-950/20 opacity-70'
                   }`}
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/8 bg-black/50 text-onyx-400">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-onyx-50/8 bg-onyx-950/50 text-onyx-400">
                       <FileText className="h-4 w-4" />
                     </span>
                     <div className="min-w-0">
@@ -269,7 +269,7 @@ export function ImportView({ contas, categorias }: { contas: Account[]; categori
                       className={`rounded-xl border p-2 transition ${
                         aprovado
                           ? 'border-gold-500/40 bg-gold-500/15 text-gold-200'
-                          : 'border-white/10 text-onyx-500 hover:text-gold-200'
+                          : 'border-onyx-50/10 text-onyx-500 hover:text-gold-200'
                       }`}
                     >
                       <CheckCircle2 className="h-4 w-4" />
@@ -288,7 +288,7 @@ export function ImportView({ contas, categorias }: { contas: Account[]; categori
               );
             })}
 
-            <div className="flex flex-col gap-3 border-t border-white/5 pt-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 border-t border-onyx-50/5 pt-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-onyx-400">
                 Saldo líquido da importação:{' '}
                 <span className={totalReceitas - totalDespesas >= 0 ? 'text-gold-200' : 'text-rose-300'}>

@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatCard } from '@/components/ui/stat-card';
-import { chartTooltipStyle, compactTick, goldPalette } from '@/lib/chart-theme';
+import { compactTick, paletaGrafico } from '@/lib/chart-theme';
+import { useTema } from '@/components/theme/theme-provider';
 
 const growth = [
   { mes: 'Mar', clientes: 12, volume: 48000 },
@@ -60,6 +61,8 @@ const avisoDriver: Record<StoreDriver, { texto: string; alerta: boolean }> = {
 
 export function AdminOverview({ users, audit, driver, resumo }: AdminOverviewProps) {
   const aviso = avisoDriver[driver];
+  const { tema } = useTema();
+  const cores = paletaGrafico(tema);
   const clientes = users.filter((user) => user.role === 'CLIENTE');
   const ativos = users.filter((user) => user.status === 'ATIVO');
   const admins = users.filter((user) => user.role === 'ADMIN');
@@ -71,7 +74,7 @@ export function AdminOverview({ users, audit, driver, resumo }: AdminOverviewPro
     .map((plano, index) => ({
       name: plano,
       value: users.filter((user) => user.plano === plano).length,
-      color: goldPalette[index % goldPalette.length],
+      color: cores.serie[index % cores.serie.length],
     }))
     .filter((item) => item.value > 0);
 
@@ -113,21 +116,21 @@ export function AdminOverview({ users, audit, driver, resumo }: AdminOverviewPro
               <AreaChart data={growth}>
                 <defs>
                   <linearGradient id="goldArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#d4af37" stopOpacity={0.55} />
-                    <stop offset="100%" stopColor="#d4af37" stopOpacity={0.03} />
+                    <stop offset="0%" stopColor={cores.positivo} stopOpacity={0.55} />
+                    <stop offset="100%" stopColor={cores.positivo} stopOpacity={0.03} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(212,175,55,0.12)" vertical={false} />
-                <XAxis dataKey="mes" stroke="#8a8a8a" tickLine={false} axisLine={false} />
-                <YAxis stroke="#8a8a8a" tickLine={false} axisLine={false} width={52} tickFormatter={compactTick} />
+                <CartesianGrid strokeDasharray="3 3" stroke={cores.grade} vertical={false} />
+                <XAxis dataKey="mes" stroke={cores.eixo} tickLine={false} axisLine={false} />
+                <YAxis stroke={cores.eixo} tickLine={false} axisLine={false} width={52} tickFormatter={compactTick} />
                 <Tooltip
-                  contentStyle={chartTooltipStyle}
+                  contentStyle={cores.tooltip}
                   formatter={(value, name) =>
                     name === 'volume' ? currencyBRL(Number(value)) : `${Number(value)} clientes`
                   }
                 />
-                <Area type="monotone" dataKey="volume" stroke="#d4af37" strokeWidth={2} fill="url(#goldArea)" />
-                <Area type="monotone" dataKey="clientes" stroke="#e9cb6d" strokeWidth={1.5} fillOpacity={0} />
+                <Area type="monotone" dataKey="volume" stroke={cores.positivo} strokeWidth={2} fill="url(#goldArea)" />
+                <Area type="monotone" dataKey="clientes" stroke={cores.serie[1]} strokeWidth={1.5} fillOpacity={0} />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -147,7 +150,7 @@ export function AdminOverview({ users, audit, driver, resumo }: AdminOverviewPro
                       <Cell key={item.name} fill={item.color} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={chartTooltipStyle} formatter={(value) => `${Number(value)} usuário(s)`} />
+                  <Tooltip contentStyle={cores.tooltip} formatter={(value) => `${Number(value)} usuário(s)`} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -175,7 +178,7 @@ export function AdminOverview({ users, audit, driver, resumo }: AdminOverviewPro
               .map((user) => (
                 <div
                   key={user.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-black/35 px-3 py-3"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-onyx-50/5 bg-onyx-950/35 px-3 py-3"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-medium text-onyx-50">{user.nome}</p>
@@ -209,7 +212,7 @@ export function AdminOverview({ users, audit, driver, resumo }: AdminOverviewPro
           <CardContent className="space-y-3 pt-0">
             {audit.length ? (
               audit.map((log) => (
-                <div key={log.id} className="rounded-xl border border-white/5 bg-black/35 px-3 py-2.5">
+                <div key={log.id} className="rounded-xl border border-onyx-50/5 bg-onyx-950/35 px-3 py-2.5">
                   <div className="flex items-center justify-between gap-3">
                     <p className="text-sm font-medium text-onyx-100">{auditLabels[log.action]}</p>
                     <span className="shrink-0 text-xs text-onyx-500">

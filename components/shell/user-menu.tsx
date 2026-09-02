@@ -60,9 +60,9 @@ export function UserMenu({ user }: { user: SessionUser }) {
         onClick={() => setOpen((value) => !value)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-2 rounded-xl border border-gold-500/20 bg-black/50 px-2 py-1.5 text-sm text-onyx-100 transition hover:border-gold-500/50"
+        className="flex items-center gap-2 rounded-xl border border-gold-500/20 bg-onyx-950/50 px-2 py-1.5 text-sm text-onyx-100 transition hover:border-gold-500/50"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-b from-gold-300 to-gold-600 text-xs font-semibold text-black">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-b from-gold-300 to-gold-600 text-xs font-semibold text-acento">
           {initials || <UserRound className="h-4 w-4" />}
         </span>
         <span className="hidden max-w-[9rem] truncate text-left sm:block">
@@ -88,7 +88,7 @@ export function UserMenu({ user }: { user: SessionUser }) {
           <Link
             href="/perfil"
             role="menuitem"
-            className="mt-1.5 flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-onyx-200 transition hover:bg-white/5 hover:text-gold-100"
+            className="mt-1.5 flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-onyx-200 transition hover:bg-onyx-50/5 hover:text-gold-100"
           >
             <UserRound className="h-4 w-4 text-onyx-400" />
             Meu perfil
@@ -98,7 +98,7 @@ export function UserMenu({ user }: { user: SessionUser }) {
             <Link
               href="/admin"
               role="menuitem"
-              className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-onyx-200 transition hover:bg-white/5 hover:text-gold-100"
+              className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-onyx-200 transition hover:bg-onyx-50/5 hover:text-gold-100"
             >
               <ShieldCheck className="h-4 w-4 text-onyx-400" />
               Painel administrativo
@@ -108,7 +108,7 @@ export function UserMenu({ user }: { user: SessionUser }) {
           <Link
             href="/dashboard"
             role="menuitem"
-            className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-onyx-200 transition hover:bg-white/5 hover:text-gold-100"
+            className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-onyx-200 transition hover:bg-onyx-50/5 hover:text-gold-100"
           >
             <LayoutDashboard className="h-4 w-4 text-onyx-400" />
             Painel do cliente

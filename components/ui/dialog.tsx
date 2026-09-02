@@ -15,7 +15,7 @@ const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
   <DialogPrimitive.Portal>
-    <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+    <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-onyx-950/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=open]:fade-in-0" />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
@@ -28,7 +28,7 @@ const DialogContent = React.forwardRef<
       {children}
       <DialogPrimitive.Close
         aria-label="Fechar"
-        className="absolute right-4 top-4 rounded-lg p-1.5 text-onyx-400 transition hover:bg-white/5 hover:text-gold-200"
+        className="absolute right-4 top-4 rounded-lg p-1.5 text-onyx-400 transition hover:bg-onyx-50/5 hover:text-gold-200"
       >
         <X className="h-4 w-4" />
       </DialogPrimitive.Close>

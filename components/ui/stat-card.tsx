@@ -47,7 +47,7 @@ export function StatCard({ title, value, hint, icon, tone = 'neutral', trend, tr
         {icon ? (
           <span
             className={cn(
-              'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gold-500/20 bg-black/50',
+              'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gold-500/20 bg-onyx-950/50',
               tones[tone],
             )}
           >

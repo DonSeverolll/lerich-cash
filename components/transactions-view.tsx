@@ -244,7 +244,7 @@ export function TransactionsView({ dados }: { dados: DadosFinanceiros }) {
           <CardContent className="p-0">
             <div className="overflow-x-auto">
               <table className="min-w-full text-left text-sm">
-                <thead className="border-b border-gold-500/15 bg-black/40 text-xs uppercase tracking-wider text-onyx-500">
+                <thead className="border-b border-gold-500/15 bg-onyx-950/40 text-xs uppercase tracking-wider text-onyx-500">
                   <tr>
                     <th className="px-5 py-3 font-medium">Descrição</th>
                     <th className="px-5 py-3 font-medium">Categoria</th>
@@ -262,7 +262,7 @@ export function TransactionsView({ dados }: { dados: DadosFinanceiros }) {
                     const receita = tx.tipo === 'RECEITA';
 
                     return (
-                      <tr key={tx.id} className="border-b border-white/5 text-onyx-200 last:border-0 hover:bg-white/[0.02]">
+                      <tr key={tx.id} className="border-b border-onyx-50/5 text-onyx-200 last:border-0 hover:bg-onyx-50/[0.02]">
                         <td className="px-5 py-4 font-medium text-onyx-50">{tx.descricao}</td>
                         <td className="px-5 py-4">
                           <span className="inline-flex items-center gap-2">
@@ -325,7 +325,7 @@ export function TransactionsView({ dados }: { dados: DadosFinanceiros }) {
             </div>
 
             {visiveis < filtradas.length ? (
-              <div className="border-t border-white/5 p-4 text-center">
+              <div className="border-t border-onyx-50/5 p-4 text-center">
                 <Button variant="subtle" onClick={() => setVisiveis((valor) => valor + PAGINA)}>
                   Carregar mais ({filtradas.length - visiveis} restantes)
                 </Button>

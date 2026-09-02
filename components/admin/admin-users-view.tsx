@@ -173,7 +173,7 @@ export function AdminUsersView({ initialUsers, currentUserId }: AdminUsersViewPr
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-gold-500/15 bg-black/40 text-xs uppercase tracking-wider text-onyx-500">
+              <thead className="border-b border-gold-500/15 bg-onyx-950/40 text-xs uppercase tracking-wider text-onyx-500">
                 <tr>
                   <th className="px-5 py-3 font-medium">Usuário</th>
                   <th className="px-5 py-3 font-medium">Perfil</th>
@@ -187,7 +187,7 @@ export function AdminUsersView({ initialUsers, currentUserId }: AdminUsersViewPr
                 {filtered.map((user) => {
                   const busy = pendingId === user.id;
                   return (
-                    <tr key={user.id} className="border-b border-white/5 last:border-0">
+                    <tr key={user.id} className="border-b border-onyx-50/5 last:border-0">
                       <td className="px-5 py-4">
                         <p className="font-medium text-onyx-50">{user.nome}</p>
                         <p className="text-xs text-onyx-500">

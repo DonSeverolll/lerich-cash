@@ -1,6 +1,6 @@
 # Lerich Finance
 
-Gestão financeira com dois painéis — **administrador** e **cliente** — em identidade visual preta e dourada.
+Gestão financeira com dois painéis — **administrador** e **cliente** — em identidade visual preta e dourada, com modo claro em prateado.
 
 Next.js 16 (App Router, Turbopack) · React 19 · TypeScript · Tailwind CSS · Recharts.
 
@@ -138,6 +138,7 @@ app/
 components/
   admin/                 Views do painel administrativo
   shell/                 Shell compartilhado (sidebar, drawer, menu do usuário)
+  theme/                 Provider e botão de alternância de tema
   ui/                    Primitivos (button, card, input, select, dialog, badge…)
 lib/
   auth/                  Criptografia, token de sessão e helpers de servidor
@@ -154,15 +155,34 @@ scripts/                 Diagnóstico do Firebase (npm run firebase:check)
 supabase/schema.sql      Esquema Postgres, caso um dia volte para SQL
 ```
 
+## Temas
+
+O site abre no **modo noturno** (preto e dourado) e tem um botão de acessibilidade no cabeçalho — e no canto das telas públicas — que alterna para o **modo claro**, onde o dourado vira um prateado escuro. A escolha fica no `localStorage`; sem escolha, o site segue a preferência do sistema.
+
+A paleta inteira vive em variáveis CSS que guardam só os canais RGB, o que permite ao Tailwind continuar aplicando opacidade (`border-gold-500/20`). A escala clara é a escura **invertida**: `text-onyx-50` continua significando "texto de maior contraste" e `bg-onyx-950` continua significando "fundo", então nenhum componente precisou de variante por tema.
+
+| Peça | Como acompanha o tema |
+| --- | --- |
+| Cores da interface | Variáveis em `app/globals.css`, sob `[data-tema='claro']` |
+| Gráficos | `lib/chart-theme.ts` devolve a paleta pelo tema atual |
+| Logotipo | Duas artes em `public/`; o CSS mostra a certa por `data-tema` |
+| Transição | Cortina metálica varrendo da direita para a esquerda (`.cortina-tema`) |
+
+O tema é aplicado por um script inline no `<head>`, antes da primeira pintura — sem ele, quem escolheu o claro veria um piscar escuro a cada carregamento.
+
 ## Marca
 
 Os arquivos ficam em `public/` e são servidos com fundo transparente, prontos para o tema escuro:
 
 | Arquivo | Uso |
 | --- | --- |
-| `logo-lerich-finance.png` | Lockup completo (dragão + nome) — tela de login |
+| `logo-lerich-finance.png` | Lockup completo (dragão + nome) — modo noturno |
+| `logo-lerich-finance-claro.png` | O mesmo lockup em prateado — modo claro |
 | `mark-lerich-finance.png` | Só o símbolo — sidebar, drawer e avatares |
+| `mark-lerich-finance-claro.png` | O símbolo em prateado — modo claro |
 | `icon.png` | Favicon e ícone de app |
+
+As versões claras foram derivadas das douradas invertendo a luminância: no modo claro o dourado desbota sobre o branco, e a palavra "LERICH", que é branca na arte original, desapareceria.
 
 Os três são consumidos por `components/brand/logo.tsx` (`BrandLockup`, `BrandMark`, `BrandWordmark`). Para trocar a marca, substitua os PNGs mantendo os nomes.
 

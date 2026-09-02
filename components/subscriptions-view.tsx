@@ -138,13 +138,13 @@ export function SubscriptionsView({ dados }: { dados: DadosFinanceiros }) {
                   <p className="text-sm text-gold-200/90">Comprometimento mensal</p>
                   <p className="mt-1 font-display text-3xl font-semibold text-onyx-50">{currencyBRL(total)}</p>
                 </div>
-                <span className="rounded-xl border border-gold-500/25 bg-black/40 p-2.5 text-gold-300">
+                <span className="rounded-xl border border-gold-500/25 bg-onyx-950/40 p-2.5 text-gold-300">
                   <Sparkles className="h-5 w-5" />
                 </span>
               </div>
               {rendaMedia > 0 ? (
                 <>
-                  <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-black/50">
+                  <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-onyx-950/50">
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-gold-300 to-gold-600"
                       style={{ width: `${Math.min(100, percentualRenda)}%` }}
@@ -161,7 +161,7 @@ export function SubscriptionsView({ dados }: { dados: DadosFinanceiros }) {
               )}
             </div>
 
-            <div className="rounded-2xl border border-white/8 bg-black/35 p-5">
+            <div className="rounded-2xl border border-onyx-50/8 bg-onyx-950/35 p-5">
               <p className="flex items-center gap-2 text-sm text-onyx-300">
                 <CalendarClock className="h-4 w-4 text-gold-400" />
                 Vencendo nos próximos 7 dias
@@ -228,7 +228,7 @@ export function SubscriptionsView({ dados }: { dados: DadosFinanceiros }) {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4 pt-0">
-                  <div className="flex items-center justify-between rounded-xl border border-white/5 bg-black/35 px-3 py-3">
+                  <div className="flex items-center justify-between rounded-xl border border-onyx-50/5 bg-onyx-950/35 px-3 py-3">
                     <span className="text-sm text-onyx-400">Valor mensal</span>
                     <span className="text-lg font-semibold text-onyx-50">{currencyBRL(assinatura.valor)}</span>
                   </div>
@@ -243,7 +243,7 @@ export function SubscriptionsView({ dados }: { dados: DadosFinanceiros }) {
                       <span>Impacto no total</span>
                       <span>{impacto.toFixed(1)}%</span>
                     </div>
-                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/5">
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-onyx-50/5">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-gold-400 to-gold-700"
                         style={{ width: `${Math.min(100, impacto)}%` }}

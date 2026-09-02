@@ -4,7 +4,17 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowDownRight, ArrowUpRight, Clock3, LayoutDashboard, LoaderCircle, PiggyBank, Sparkles, TrendingUp, Wallet } from 'lucide-react';
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Clock3,
+  LayoutDashboard,
+  LoaderCircle,
+  PiggyBank,
+  Sparkles,
+  TrendingUp,
+  Wallet,
+} from 'lucide-react';
 import {
   Bar,
   BarChart,
@@ -23,15 +33,7 @@ import {
 
 import type { DadosFinanceiros } from '@/types';
 
-import {
-  chartAxis,
-  chartGrid,
-  chartTooltipStyle,
-  compactTick,
-  goldPalette,
-  negativeColor,
-  positiveColor,
-} from '@/lib/chart-theme';
+import { compactTick, paletaGrafico } from '@/lib/chart-theme';
 import { currencyBRL } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,6 +42,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Select } from '@/components/ui/select';
 import { StatCard } from '@/components/ui/stat-card';
 import { chamarApi } from '@/lib/api-client';
+import { useTema } from '@/components/theme/theme-provider';
 
 function monthKeyLabel(key: string) {
   const [ano, mes] = key.split('-').map(Number);
@@ -48,6 +51,8 @@ function monthKeyLabel(key: string) {
 
 export function DashboardView({ dados }: { dados: DadosFinanceiros }) {
   const router = useRouter();
+  const { tema } = useTema();
+  const cores = paletaGrafico(tema);
   const [populando, setPopulando] = useState(false);
   const { contas: mockAccounts, categorias: mockCategories, assinaturas: mockSubscriptions, transacoes: mockTransactions } = dados;
 
@@ -129,11 +134,11 @@ export function DashboardView({ dados }: { dados: DadosFinanceiros }) {
           value: doMes
             .filter((tx) => tx.categoria_id === cat.id && tx.tipo === 'DESPESA')
             .reduce((sum, tx) => sum + tx.valor, 0),
-          color: cat.cor_hex || goldPalette[index % goldPalette.length],
+          color: cat.cor_hex || cores.serie[index % cores.serie.length],
         }))
         .filter((item) => item.value > 0)
         .sort((a, b) => b.value - a.value),
-    [doMes, mockCategories],
+    [doMes, mockCategories, cores.serie],
   );
 
   const maiorCategoria = despesasPorCategoria[0];
@@ -267,17 +272,17 @@ export function DashboardView({ dados }: { dados: DadosFinanceiros }) {
           <CardContent className="h-80 pt-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={fluxoMensal}>
-                <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
-                <XAxis dataKey="name" stroke={chartAxis} tickLine={false} axisLine={false} />
-                <YAxis stroke={chartAxis} tickLine={false} axisLine={false} width={52} tickFormatter={compactTick} />
+                <CartesianGrid strokeDasharray="3 3" stroke={cores.grade} vertical={false} />
+                <XAxis dataKey="name" stroke={cores.eixo} tickLine={false} axisLine={false} />
+                <YAxis stroke={cores.eixo} tickLine={false} axisLine={false} width={52} tickFormatter={compactTick} />
                 <Tooltip
-                  cursor={{ fill: 'rgba(212,175,55,0.06)' }}
-                  contentStyle={chartTooltipStyle}
+                  cursor={{ fill: cores.cursor }}
+                  contentStyle={cores.tooltip}
                   formatter={(value) => currencyBRL(Number(value))}
                 />
-                <Legend wrapperStyle={{ fontSize: 12, color: chartAxis }} />
-                <Bar name="Receitas" dataKey="receitas" radius={[8, 8, 0, 0]} fill={positiveColor} />
-                <Bar name="Despesas" dataKey="despesas" radius={[8, 8, 0, 0]} fill={negativeColor} />
+                <Legend wrapperStyle={{ fontSize: 12, color: cores.eixo }} />
+                <Bar name="Receitas" dataKey="receitas" radius={[8, 8, 0, 0]} fill={cores.positivo} />
+                <Bar name="Despesas" dataKey="despesas" radius={[8, 8, 0, 0]} fill={cores.negativo} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -305,11 +310,11 @@ export function DashboardView({ dados }: { dados: DadosFinanceiros }) {
                     stroke="none"
                   >
                     {despesasPorCategoria.map((entry, index) => (
-                      <Cell key={entry.name} fill={entry.color || goldPalette[index % goldPalette.length]} />
+                      <Cell key={entry.name} fill={entry.color || cores.serie[index % cores.serie.length]} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={chartTooltipStyle} formatter={(value) => currencyBRL(Number(value))} />
-                  <Legend wrapperStyle={{ fontSize: 11, color: chartAxis }} />
+                  <Tooltip contentStyle={cores.tooltip} formatter={(value) => currencyBRL(Number(value))} />
+                  <Legend wrapperStyle={{ fontSize: 11, color: cores.eixo }} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -337,7 +342,7 @@ export function DashboardView({ dados }: { dados: DadosFinanceiros }) {
               return (
                 <div
                   key={tx.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-black/35 px-3 py-3 transition hover:border-gold-500/25"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-onyx-50/5 bg-onyx-950/35 px-3 py-3 transition hover:border-gold-500/25"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-medium text-onyx-50">{tx.descricao}</p>
@@ -371,7 +376,7 @@ export function DashboardView({ dados }: { dados: DadosFinanceiros }) {
               {proximasAssinaturas.map((subscription) => (
                 <div
                   key={subscription.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-black/35 px-3 py-3"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-onyx-50/5 bg-onyx-950/35 px-3 py-3"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-medium text-onyx-50">{subscription.nome_servico}</p>
@@ -393,15 +398,15 @@ export function DashboardView({ dados }: { dados: DadosFinanceiros }) {
             <CardContent className="h-48 pt-0">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={fluxoMensal}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} vertical={false} />
-                  <XAxis dataKey="name" stroke={chartAxis} tickLine={false} axisLine={false} />
-                  <Tooltip contentStyle={chartTooltipStyle} formatter={(value) => currencyBRL(Number(value))} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={cores.grade} vertical={false} />
+                  <XAxis dataKey="name" stroke={cores.eixo} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={cores.tooltip} formatter={(value) => currencyBRL(Number(value))} />
                   <Line
                     type="monotone"
                     dataKey="saldo"
-                    stroke={positiveColor}
+                    stroke={cores.positivo}
                     strokeWidth={2.5}
-                    dot={{ r: 3, fill: positiveColor }}
+                    dot={{ r: 3, fill: cores.positivo }}
                   />
                 </LineChart>
               </ResponsiveContainer>
