@@ -36,7 +36,7 @@ export default async function ResetPasswordPage({
       ) : (
         <Card className="animate-fade-up border-gold-500/20 bg-onyx-950/70 backdrop-blur">
           <CardContent className="p-7">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-200">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-aviso-500/30 bg-aviso-500/10 text-aviso-200">
               <TriangleAlert className="h-7 w-7" />
             </div>
             <h2 className="mt-5 text-2xl font-semibold text-onyx-50">Link indisponível</h2>

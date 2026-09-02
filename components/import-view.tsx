@@ -197,7 +197,7 @@ export function ImportView({ contas, categorias }: { contas: Account[]; categori
           </CardHeader>
           <CardContent className="space-y-3 pt-0">
             {semCategoria > 0 ? (
-              <p className="flex items-center gap-2 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2.5 text-sm text-amber-100">
+              <p className="flex items-center gap-2 rounded-xl border border-aviso-500/25 bg-aviso-500/10 px-3 py-2.5 text-sm text-aviso-100">
                 <TriangleAlert className="h-4 w-4 shrink-0" />
                 {semCategoria} lançamento(s) selecionado(s) ainda sem categoria.
               </p>

@@ -180,7 +180,7 @@ export function ForgotPasswordForm() {
             </p>
 
             {!provedorConfigurado ? (
-              <p className="mt-5 rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2.5 text-xs leading-relaxed text-amber-100">
+              <p className="mt-5 rounded-xl border border-aviso-500/25 bg-aviso-500/10 px-3 py-2.5 text-xs leading-relaxed text-aviso-100">
                 Ambiente sem provedor de e-mail configurado: o link foi gravado no log do servidor em
                 vez de enviado. Defina <code>RESEND_API_KEY</code> para o envio real.
               </p>

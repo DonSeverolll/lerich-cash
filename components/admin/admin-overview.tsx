@@ -83,7 +83,7 @@ export function AdminOverview({ users, audit, driver, resumo }: AdminOverviewPro
       <div
         className={
           aviso.alerta
-            ? 'flex items-start gap-3 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-100'
+            ? 'flex items-start gap-3 rounded-2xl border border-aviso-500/25 bg-aviso-500/10 p-4 text-sm text-aviso-100'
             : 'flex items-start gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-100'
         }
       >

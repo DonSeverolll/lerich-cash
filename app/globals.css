@@ -55,6 +55,18 @@
   /* Texto que fica sobre o acento cheio (botão primário, avatar) */
   --acento-texto: 5 5 5;
 
+  /* Aviso em prata clara — sobre o preto, prata escura desapareceria */
+  --aviso-50: 238 241 245;
+  --aviso-100: 221 226 232;
+  --aviso-200: 198 205 214;
+  --aviso-300: 170 179 191;
+  --aviso-400: 141 151 164;
+  --aviso-500: 116 128 142;
+  --aviso-600: 93 104 117;
+  --aviso-700: 71 80 92;
+  --aviso-800: 57 66 77;
+  --aviso-900: 43 50 59;
+
   /* Tons de estado: claros, para contrastar com o fundo preto */
   --emerald-50: 236 253 245;
   --emerald-100: 209 250 229;
@@ -78,16 +90,6 @@
   --rose-800: 159 18 57;
   --rose-900: 136 19 55;
 
-  --amber-50: 255 251 235;
-  --amber-100: 254 243 199;
-  --amber-200: 253 230 138;
-  --amber-300: 252 211 77;
-  --amber-400: 251 191 36;
-  --amber-500: 245 158 11;
-  --amber-600: 217 119 6;
-  --amber-700: 180 83 9;
-  --amber-800: 146 64 14;
-  --amber-900: 120 53 15;
 
   /* Superfície dos cartões e trilho da barra de rolagem */
   --superficie-de: 26 24 20;
@@ -140,6 +142,18 @@
 
   --acento-texto: 255 255 255;
 
+  /* Aviso em prata escura, como o acento do tema claro */
+  --aviso-50: 43 50 59;
+  --aviso-100: 43 50 59;
+  --aviso-200: 57 66 77;
+  --aviso-300: 71 80 92;
+  --aviso-400: 93 104 117;
+  --aviso-500: 116 128 142;
+  --aviso-600: 141 151 164;
+  --aviso-700: 170 179 191;
+  --aviso-800: 198 205 214;
+  --aviso-900: 221 226 232;
+
   /* No claro os tons de estado escurecem o suficiente para serem legíveis */
   --emerald-50: 6 95 70;
   --emerald-100: 6 95 70;
@@ -163,16 +177,6 @@
   --rose-800: 254 205 211;
   --rose-900: 255 228 230;
 
-  --amber-50: 146 64 14;
-  --amber-100: 146 64 14;
-  --amber-200: 180 83 9;
-  --amber-300: 180 83 9;
-  --amber-400: 217 119 6;
-  --amber-500: 245 158 11;
-  --amber-600: 251 191 36;
-  --amber-700: 252 211 77;
-  --amber-800: 253 230 138;
-  --amber-900: 254 243 199;
 
   --superficie-de: 255 255 255;
   --superficie-para: 240 242 246;

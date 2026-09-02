@@ -58,7 +58,7 @@ export function SignupForm({ cadastroAberto }: { cadastroAberto: boolean }) {
         <p className="mt-1 text-sm text-onyx-400">Leva menos de um minuto.</p>
 
         {!cadastroAberto ? (
-          <div className="mt-6 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3.5 text-sm text-amber-100">
+          <div className="mt-6 rounded-xl border border-aviso-500/25 bg-aviso-500/10 px-4 py-3.5 text-sm text-aviso-100">
             O cadastro público está desativado no momento. Peça um acesso ao administrador.
           </div>
         ) : (

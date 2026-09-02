@@ -32,7 +32,8 @@ const config: Config = {
         // o tema. Sem isso, `text-rose-300` fica ilegível no modo claro.
         emerald: escala('emerald', [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]),
         rose: escala('rose', [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]),
-        amber: escala('amber', [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]),
+        // Aviso em prata, no lugar do âmbar: o amarelo saiu da identidade.
+        aviso: escala('aviso', [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]),
       },
       borderRadius: {
         xl: '1rem',

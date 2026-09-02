@@ -12,7 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       {settings.avisoManutencao ? (
         <div
           role="status"
-          className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-100"
+          className="mb-6 flex items-start gap-3 rounded-2xl border border-aviso-500/25 bg-aviso-500/10 p-4 text-sm text-aviso-100"
         >
           <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
           <p>{settings.avisoManutencao}</p>
