@@ -86,7 +86,13 @@ export function AppShell({ variant, user, children, headerSlot }: AppShellProps)
 
         {/* ----- Conteúdo ----- */}
         <div className="min-w-0 flex-1">
-          <header className="mb-6 flex flex-col gap-4 rounded-2xl border border-gold-500/15 bg-black/50 p-4 backdrop-blur md:flex-row md:items-center md:justify-between">
+          {/*
+            `backdrop-blur` cria um contexto de empilhamento próprio, então o
+            z-index do menu do usuário só vale dentro do cabeçalho. Sem um
+            z-index aqui, o conteúdo da página — que vem depois no DOM — pinta
+            por cima do menu aberto.
+          */}
+          <header className="relative z-30 mb-6 flex flex-col gap-4 rounded-2xl border border-gold-500/15 bg-black/50 p-4 backdrop-blur md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-3">
               <button
                 type="button"
@@ -116,7 +122,7 @@ export function AppShell({ variant, user, children, headerSlot }: AppShellProps)
             </div>
           </header>
 
-          <main className="animate-fade-up pb-10">{children}</main>
+          <main className="relative z-0 animate-fade-up pb-10">{children}</main>
         </div>
       </div>
 
