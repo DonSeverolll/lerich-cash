@@ -456,10 +456,11 @@ export async function popularDadosDeExemplo(userId: string): Promise<number> {
   const porNome = (nome: string) => categorias.find((item) => item.nome === nome);
 
   const modelosDeConta: Array<{ nome: string; tipo: AccountType; saldo: number; cor: string }> = [
-    { nome: 'Conta corrente', tipo: 'CORRENTE', saldo: 4200, cor: '#d4af37' },
-    { nome: 'Poupança', tipo: 'POUPANCA', saldo: 18000, cor: '#e9cb6d' },
-    { nome: 'Investimentos', tipo: 'INVESTIMENTO', saldo: 54000, cor: '#b8912a' },
-    { nome: 'Carteira', tipo: 'CARTEIRA', saldo: 980, cor: '#f2e0a0' },
+    // Cores na escala de prioridade: amarelo (reserva) -> vermelho (uso diário).
+    { nome: 'Conta corrente', tipo: 'CORRENTE', saldo: 4200, cor: '#c33a35' },
+    { nome: 'Poupança', tipo: 'POUPANCA', saldo: 18000, cor: '#efac34' },
+    { nome: 'Investimentos', tipo: 'INVESTIMENTO', saldo: 54000, cor: '#f2d24c' },
+    { nome: 'Carteira', tipo: 'CARTEIRA', saldo: 980, cor: '#e8823a' },
   ];
 
   const contas: Account[] = [];

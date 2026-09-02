@@ -8,7 +8,8 @@ import { toast } from 'sonner';
 import type { Account, AccountType, DadosFinanceiros } from '@/types';
 
 import { chamarApi } from '@/lib/api-client';
-import { currencyBRL } from '@/lib/utils';
+import { PRIORIDADES, PRIORIDADE_PADRAO, prioridadeDaCor } from '@/lib/prioridades';
+import { cn, currencyBRL } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,8 +33,6 @@ const tipoLabels: Record<AccountType, string> = {
   INVESTIMENTO: 'Investimento',
   CARTEIRA: 'Carteira',
 };
-
-const cores = ['#d4af37', '#e9cb6d', '#b8912a', '#f2e0a0', '#936e23', '#dcb648'];
 
 export function AccountsView({ dados }: { dados: DadosFinanceiros }) {
   const router = useRouter();
@@ -138,6 +137,13 @@ export function AccountsView({ dados }: { dados: DadosFinanceiros }) {
                         {tipoLabels[conta.tipo]}
                       </p>
                       <h3 className="mt-1 truncate text-xl font-semibold text-onyx-50">{conta.nome}</h3>
+                      <p className="mt-1 flex items-center gap-1.5 text-xs text-onyx-400">
+                        <span
+                          className="h-2 w-2 shrink-0 rounded-full"
+                          style={{ backgroundColor: conta.cor_hex }}
+                        />
+                        Prioridade {prioridadeDaCor(conta.cor_hex).nome.toLowerCase()}
+                      </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-1.5">
                       <button
@@ -245,6 +251,53 @@ export function AccountsView({ dados }: { dados: DadosFinanceiros }) {
   );
 }
 
+/**
+ * Escolha da cor por nível de prioridade, do amarelo ao vermelho. O valor
+ * enviado continua sendo o hexadecimal, então nada muda na API.
+ */
+function SeletorDePrioridade({ valorInicial }: { valorInicial?: string }) {
+  const [cor, setCor] = useState(valorInicial ?? PRIORIDADE_PADRAO.cor);
+  const atual = prioridadeDaCor(cor);
+
+  return (
+    <fieldset className="space-y-2">
+      <legend className="block text-xs font-medium uppercase tracking-[0.14em] text-onyx-400">
+        Prioridade
+      </legend>
+      <input type="hidden" name="cor_hex" value={cor} />
+
+      <div className="flex gap-2">
+        {PRIORIDADES.map((prioridade) => {
+          const selecionada = prioridade.cor === cor;
+
+          return (
+            <button
+              key={prioridade.nivel}
+              type="button"
+              onClick={() => setCor(prioridade.cor)}
+              aria-pressed={selecionada}
+              title={`${prioridade.nome} — ${prioridade.descricao}`}
+              className={cn(
+                'flex h-11 flex-1 items-end justify-center rounded-xl border pb-1.5 text-[10px] font-semibold text-black/70 transition',
+                selecionada
+                  ? 'border-white/70 ring-2 ring-white/50'
+                  : 'border-white/10 opacity-70 hover:opacity-100',
+              )}
+              style={{ backgroundColor: prioridade.cor }}
+            >
+              {prioridade.nivel}
+            </button>
+          );
+        })}
+      </div>
+
+      <p className="text-xs text-onyx-500">
+        <span className="text-onyx-200">{atual.nome}</span> — {atual.descricao}
+      </p>
+    </fieldset>
+  );
+}
+
 function ContaDialog({
   aberto,
   conta,
@@ -323,16 +376,7 @@ function ContaDialog({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="conta-cor">Cor</Label>
-            <Select id="conta-cor" name="cor_hex" defaultValue={conta?.cor_hex ?? cores[0]}>
-              {cores.map((cor) => (
-                <option key={cor} value={cor}>
-                  {cor}
-                </option>
-              ))}
-            </Select>
-          </div>
+          <SeletorDePrioridade valorInicial={conta?.cor_hex} />
 
           <DialogFooter>
             <Button type="button" variant="subtle" onClick={onFechar}>
