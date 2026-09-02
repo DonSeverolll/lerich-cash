@@ -16,26 +16,28 @@ import type {
   AppUser,
   AuditAction,
   AuditLog,
+  PasswordReset,
   StoredUser,
   UserPlan,
   UserRole,
   UserStatus,
 } from '@/types';
 
-import { hashPassword, randomId, verifyPassword } from '@/lib/auth/crypto';
+import { hashPassword, hashToken, randomId, verifyPassword } from '@/lib/auth/crypto';
 
 const DATA_FILE = join(process.cwd(), '.data', 'store.json');
 
 interface StoreShape {
   users: StoredUser[];
   audit: AuditLog[];
+  resets: PasswordReset[];
   settings: AppSettings;
 }
 
 const defaultSettings: AppSettings = {
   nomeMarca: 'Lerich Finance',
   moeda: 'BRL',
-  permitirCadastroPublico: false,
+  permitirCadastroPublico: true,
   limiteContasPorCliente: 10,
   avisoManutencao: '',
 };
@@ -47,7 +49,7 @@ let persistenceAvailable = true;
 let seeding: Promise<void> | null = null;
 
 function emptyStore(): StoreShape {
-  return { users: [], audit: [], settings: { ...defaultSettings } };
+  return { users: [], audit: [], resets: [], settings: { ...defaultSettings } };
 }
 
 /**
@@ -64,6 +66,7 @@ function load(): StoreShape {
     cache = {
       users: parsed.users ?? [],
       audit: parsed.audit ?? [],
+      resets: parsed.resets ?? [],
       settings: { ...defaultSettings, ...(parsed.settings ?? {}) },
     };
     cachedMtimeMs = mtimeMs;
@@ -176,6 +179,17 @@ export async function listUsers(): Promise<AppUser[]> {
 export async function findUserById(id: string): Promise<StoredUser | undefined> {
   const store = await ready();
   return store.users.find((user) => user.id === id);
+}
+
+/** Busca por nome de usuário OU e-mail, ambos sem diferenciar maiúsculas. */
+export async function findUserByIdentifier(identifier: string): Promise<StoredUser | undefined> {
+  const store = await ready();
+  const alvo = identifier.trim().toLowerCase();
+  if (!alvo) return undefined;
+
+  return store.users.find(
+    (user) => user.username.toLowerCase() === alvo || user.email.toLowerCase() === alvo,
+  );
 }
 
 export async function getSettings(): Promise<AppSettings> {
@@ -297,6 +311,79 @@ export async function deleteUser(id: string): Promise<AppUser> {
   store.users = store.users.filter((candidate) => candidate.id !== id);
   persist();
   return toPublicUser(target);
+}
+
+/* ---------- Recuperação de senha ---------- */
+
+const RESET_TTL_MS = 60 * 60 * 1000; // 1 hora
+
+/**
+ * Cria um pedido de redefinição e devolve o token em claro — que só viaja
+ * dentro do link do e-mail. Pedidos anteriores do mesmo usuário são
+ * invalidados, então o último link enviado é sempre o único válido.
+ */
+export async function createPasswordReset(userId: string): Promise<string> {
+  const store = await ready();
+  const agora = Date.now();
+
+  for (const reset of store.resets) {
+    if (reset.user_id === userId && !reset.used_at) reset.used_at = new Date(agora).toISOString();
+  }
+
+  const token = `${randomId(24)}${randomId(8)}`;
+  store.resets.push({
+    id: randomId(8),
+    user_id: userId,
+    token_hash: await hashToken(token),
+    created_at: new Date(agora).toISOString(),
+    expires_at: new Date(agora + RESET_TTL_MS).toISOString(),
+    used_at: null,
+  });
+
+  // Descarta pedidos velhos para o arquivo não crescer sem limite.
+  store.resets = store.resets.filter((reset) => Date.parse(reset.expires_at) > agora - RESET_TTL_MS);
+
+  persist();
+  return token;
+}
+
+export type ResetCheck =
+  | { ok: true; user: StoredUser }
+  | { ok: false; reason: 'INVALIDO' | 'EXPIRADO' | 'USADO' };
+
+/** Valida o token sem consumi-lo — usado para decidir se a tela abre. */
+export async function checkPasswordReset(token: string): Promise<ResetCheck> {
+  const store = await ready();
+  const hash = await hashToken(token);
+  const reset = store.resets.find((item) => item.token_hash === hash);
+
+  if (!reset) return { ok: false, reason: 'INVALIDO' };
+  if (reset.used_at) return { ok: false, reason: 'USADO' };
+  if (Date.parse(reset.expires_at) < Date.now()) return { ok: false, reason: 'EXPIRADO' };
+
+  const user = store.users.find((item) => item.id === reset.user_id);
+  if (!user) return { ok: false, reason: 'INVALIDO' };
+
+  return { ok: true, user };
+}
+
+/** Consome o token e troca a senha. O token vira inválido no mesmo passo. */
+export async function consumePasswordReset(
+  token: string,
+  novaSenha: string,
+): Promise<{ ok: true; user: AppUser } | { ok: false; reason: 'INVALIDO' | 'EXPIRADO' | 'USADO' }> {
+  const store = await ready();
+  const verificacao = await checkPasswordReset(token);
+  if (!verificacao.ok) return verificacao;
+
+  const hash = await hashToken(token);
+  const reset = store.resets.find((item) => item.token_hash === hash);
+  if (reset) reset.used_at = new Date().toISOString();
+
+  verificacao.user.password_hash = await hashPassword(novaSenha);
+  persist();
+
+  return { ok: true, user: toPublicUser(verificacao.user) };
 }
 
 /* ---------- Auditoria ---------- */

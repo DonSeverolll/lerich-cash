@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AlertCircle, Eye, EyeOff, LoaderCircle, LogIn } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, LoaderCircle, LogIn, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { BrandLockup } from '@/components/brand/logo';
@@ -112,14 +113,37 @@ export function LoginForm() {
             </p>
           ) : null}
 
-          <Button type="submit" disabled={pending} className="w-full gap-2">
-            {pending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
-            {pending ? 'Verificando…' : 'Entrar'}
-          </Button>
+          <div className="space-y-3">
+            <Button type="submit" disabled={pending} className="w-full gap-2">
+              {pending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
+              {pending ? 'Verificando…' : 'Entrar'}
+            </Button>
+
+            <div className="flex justify-center">
+              <Link
+                href="/recuperar-senha"
+                className="rounded-lg px-2 py-1 text-sm text-onyx-400 underline-offset-4 transition hover:text-gold-200 hover:underline"
+              >
+                Esqueci minha senha
+              </Link>
+            </div>
+          </div>
         </form>
 
-        <div className="gold-rule my-6" />
-        <p className="text-xs leading-relaxed text-onyx-500">
+        <div className="my-6 flex items-center gap-3">
+          <span className="h-px flex-1 bg-gradient-to-r from-transparent to-gold-500/40" />
+          <span className="text-[11px] uppercase tracking-[0.2em] text-onyx-500">ou</span>
+          <span className="h-px flex-1 bg-gradient-to-l from-transparent to-gold-500/40" />
+        </div>
+
+        <Button asChild variant="outline" className="w-full gap-2">
+          <Link href="/cadastro">
+            <UserPlus className="h-4 w-4" />
+            Criar minha conta
+          </Link>
+        </Button>
+
+        <p className="mt-6 text-xs leading-relaxed text-onyx-500">
           Cada acesso é registrado na auditoria. Após 5 tentativas incorretas o usuário é bloqueado
           temporariamente.
         </p>

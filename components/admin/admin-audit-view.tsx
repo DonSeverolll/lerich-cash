@@ -19,6 +19,9 @@ const meta: Record<AuditAction, { label: string; tone: BadgeTone }> = {
   USUARIO_ATUALIZADO: { label: 'Usuário atualizado', tone: 'gold' },
   USUARIO_REMOVIDO: { label: 'Usuário removido', tone: 'danger' },
   SENHA_REDEFINIDA: { label: 'Senha redefinida', tone: 'warning' },
+  CADASTRO_PUBLICO: { label: 'Cadastro público', tone: 'gold' },
+  RESET_SOLICITADO: { label: 'Recuperação pedida', tone: 'warning' },
+  RESET_CONCLUIDO: { label: 'Senha recuperada', tone: 'success' },
 };
 
 export function AdminAuditView({ logs }: { logs: AuditLog[] }) {

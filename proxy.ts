@@ -18,8 +18,9 @@ export async function proxy(request: NextRequest) {
   const isAdminRoute = matches(pathname, ADMIN_PREFIXES);
   const isClientRoute = matches(pathname, CLIENT_PREFIXES);
 
-  // Já autenticado tentando abrir o login: manda para o painel adequado.
-  if (pathname === '/login' && session) {
+  // Já autenticado tentando abrir uma tela pública: manda para o painel.
+  const rotaPublica = ['/login', '/cadastro', '/recuperar-senha', '/redefinir-senha'].includes(pathname);
+  if (rotaPublica && session) {
     return NextResponse.redirect(new URL(session.role === 'ADMIN' ? '/admin' : '/dashboard', request.url));
   }
 
@@ -41,6 +42,9 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     '/login',
+    '/cadastro',
+    '/recuperar-senha',
+    '/redefinir-senha',
     '/admin/:path*',
     '/dashboard/:path*',
     '/transacoes/:path*',

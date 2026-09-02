@@ -104,7 +104,10 @@ export type AuditAction =
   | 'USUARIO_CRIADO'
   | 'USUARIO_ATUALIZADO'
   | 'USUARIO_REMOVIDO'
-  | 'SENHA_REDEFINIDA';
+  | 'SENHA_REDEFINIDA'
+  | 'CADASTRO_PUBLICO'
+  | 'RESET_SOLICITADO'
+  | 'RESET_CONCLUIDO';
 
 export interface AuditLog {
   id: string;
@@ -121,4 +124,17 @@ export interface AppSettings {
   permitirCadastroPublico: boolean;
   limiteContasPorCliente: number;
   avisoManutencao: string;
+}
+
+/**
+ * Pedido de redefinição de senha. Guardamos apenas o hash do token — o valor
+ * em claro existe só dentro do link enviado por e-mail.
+ */
+export interface PasswordReset {
+  id: string;
+  user_id: string;
+  token_hash: string;
+  created_at: string;
+  expires_at: string;
+  used_at: string | null;
 }

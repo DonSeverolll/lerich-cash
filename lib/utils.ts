@@ -27,3 +27,23 @@ export function formatDate(date: Date | string) {
     year: 'numeric',
   }).format(parsed);
 }
+
+/**
+ * Mostra só uma fração do e-mail, o bastante para o dono reconhecer sem expor
+ * o endereço: `alejandro.lima@dcastro.adv.br` -> `al••••••••@dc•••••.adv.br`.
+ */
+export function maskEmail(email: string): string {
+  const [local, domain] = email.split('@');
+  if (!local || !domain) return '•••';
+
+  const mascara = (trecho: string, visiveis: number) =>
+    trecho.length <= visiveis
+      ? `${trecho[0] ?? ''}${'•'.repeat(Math.max(1, trecho.length - 1))}`
+      : `${trecho.slice(0, visiveis)}${'•'.repeat(Math.min(8, trecho.length - visiveis))}`;
+
+  const partes = domain.split('.');
+  const nome = partes.shift() ?? '';
+  const sufixo = partes.length ? `.${partes.join('.')}` : '';
+
+  return `${mascara(local, 2)}@${mascara(nome, 2)}${sufixo}`;
+}

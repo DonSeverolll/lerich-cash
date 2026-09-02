@@ -60,3 +60,43 @@ export async function verifySessionToken(token: string | undefined | null): Prom
     return null;
   }
 }
+
+/* ---------- Tokens curtos de propósito único ---------- */
+
+interface ShortPayload<T> {
+  p: string;
+  d: T;
+  exp: number;
+}
+
+/**
+ * Assina um dado pequeno com prazo curto — usado para amarrar as duas etapas
+ * da recuperação de senha, de modo que a etapa de envio só aceite um usuário
+ * que realmente passou pela etapa de confirmação.
+ */
+export async function createShortToken<T>(purpose: string, data: T, ttlSeconds: number): Promise<string> {
+  const payload: ShortPayload<T> = {
+    p: purpose,
+    d: data,
+    exp: Math.floor(Date.now() / 1000) + ttlSeconds,
+  };
+  const body = toBase64Url(new TextEncoder().encode(JSON.stringify(payload)));
+  return `${body}.${await hmac(getAuthSecret(), body)}`;
+}
+
+export async function verifyShortToken<T>(purpose: string, token: string | undefined): Promise<T | null> {
+  if (!token) return null;
+
+  const [body, signature] = token.split('.');
+  if (!body || !signature) return null;
+  if (!safeEqual(signature, await hmac(getAuthSecret(), body))) return null;
+
+  try {
+    const payload = JSON.parse(new TextDecoder().decode(fromBase64Url(body))) as ShortPayload<T>;
+    if (payload.p !== purpose) return null;
+    if (payload.exp * 1000 < Date.now()) return null;
+    return payload.d;
+  } catch {
+    return null;
+  }
+}

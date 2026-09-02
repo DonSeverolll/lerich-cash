@@ -31,6 +31,9 @@ const auditLabels: Record<AuditLog['action'], string> = {
   USUARIO_ATUALIZADO: 'Usuário atualizado',
   USUARIO_REMOVIDO: 'Usuário removido',
   SENHA_REDEFINIDA: 'Senha redefinida',
+  CADASTRO_PUBLICO: 'Cadastro público',
+  RESET_SOLICITADO: 'Recuperação pedida',
+  RESET_CONCLUIDO: 'Senha recuperada',
 };
 
 interface AdminOverviewProps {

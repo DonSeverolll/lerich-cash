@@ -77,3 +77,15 @@ export async function hmac(secret: string, payload: string): Promise<string> {
   const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(payload));
   return toBase64Url(signature);
 }
+
+/* ---------- Tokens de uso único ---------- */
+
+/**
+ * Digest SHA-256 do token de recuperação. O token em claro só existe no link
+ * enviado ao usuário; o banco guarda apenas este hash, então vazar o store não
+ * permite redefinir a senha de ninguém.
+ */
+export async function hashToken(token: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', encoder.encode(token));
+  return toBase64Url(digest);
+}

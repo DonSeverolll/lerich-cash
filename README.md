@@ -50,6 +50,31 @@ Preencha `AUTH_SECRET`, `ADMIN_USERNAME` e `ADMIN_PASSWORD` — só então o adm
 
 > Em produção a aplicação **recusa subir sem `AUTH_SECRET`**. Depois do primeiro acesso, troque a senha pelo painel (`Meu perfil → Alterar senha`) — a partir daí o hash gravado é a fonte da verdade e `ADMIN_PASSWORD` deixa de ser usada.
 
+## Telas públicas
+
+| Rota | O que faz |
+| --- | --- |
+| `/login` | Acesso com usuário e senha, com atalhos para cadastro e recuperação |
+| `/cadastro` | Abertura de conta pelo próprio cliente (papel CLIENTE, plano FREE) |
+| `/recuperar-senha` | Recuperação em 3 etapas: identificar → confirmar e-mail mascarado → enviar link |
+| `/redefinir-senha?token=…` | Define a nova senha; valida o token antes de mostrar o formulário |
+
+O cadastro público respeita a chave **Permitir cadastro público** das configurações do administrador — desligada, a tela explica que o acesso é criado pelo admin.
+
+### Recuperação de senha
+
+Na etapa de confirmação o endereço aparece parcialmente mascarado — `ma••••••••@ex•••••.com.br` — o bastante para o dono reconhecer sem expor o e-mail a quem apenas digitou o nome de usuário.
+
+| Proteção | Como funciona |
+| --- | --- |
+| Token | 32 bytes aleatórios; o banco guarda apenas o SHA-256 |
+| Validade | 1 hora, uso único; pedir um novo link invalida o anterior |
+| Ticket entre etapas | Assinado com HMAC e válido por 10 min, para que o envio não possa ser disparado para uma conta arbitrária |
+| Limite | Consultas e cadastros limitados por IP |
+| Depois da troca | A senha antiga deixa de valer e não há login automático |
+
+> A etapa de confirmação revela que a conta existe — é inerente a este desenho. O limite por IP é o que impede varredura. Para eliminar por completo, troque a tela de confirmação por uma resposta genérica ("se a conta existir, enviamos o link").
+
 ## Os dois painéis
 
 ### Painel do administrador (`/admin`)
@@ -82,23 +107,40 @@ Preencha `AUTH_SECRET`, `ADMIN_USERNAME` e `ADMIN_PASSWORD` — só então o adm
 
 Regras de integridade: o sistema não deixa remover, rebaixar ou suspender o último administrador ativo, e ninguém remove a própria conta.
 
+## E-mail transacional
+
+O envio usa a API HTTP do Resend (sem SDK — só `fetch`, o que funciona em serverless).
+
+| Variável | Função |
+| --- | --- |
+| `RESEND_API_KEY` | Chave do provedor. **Sem ela nenhum e-mail é enviado** |
+| `MAIL_FROM` | Remetente verificado no provedor |
+| `APP_URL` | Base dos links do e-mail; na Vercel é detectada automaticamente |
+
+Sem a chave, o link de recuperação é gravado no log do servidor e a própria tela avisa disso — o fluxo continua testável em desenvolvimento sem configurar nada.
+
+Para trocar de provedor, reescreva `enviarEmail` em `lib/server/mailer.ts`; o resto do fluxo não muda.
+
 ## Estrutura
 
 ```
 app/
   (admin)/admin/...      Painel administrativo (layout com requireAdmin)
   (dashboard)/...        Painel do cliente (layout com requireSession)
-  api/auth/...           Login e logout
+  api/auth/...           Login, logout, cadastro e recuperação de senha
   api/admin/...          Usuários e configurações (somente ADMIN)
   api/account/password   Troca de senha do próprio usuário
   login/                 Tela de acesso
+  cadastro/              Abertura de conta pelo cliente
+  recuperar-senha/       Recuperação em 3 etapas
+  redefinir-senha/       Nova senha a partir do link do e-mail
 components/
   admin/                 Views do painel administrativo
   shell/                 Shell compartilhado (sidebar, drawer, menu do usuário)
   ui/                    Primitivos (button, card, input, select, dialog, badge…)
 lib/
   auth/                  Criptografia, token de sessão e helpers de servidor
-  server/                Store de usuários/auditoria e rate limit
+  server/                Store, envio de e-mail e rate limit
   mock-data.ts           Dados de demonstração gerados a partir do mês atual
   ofx-parser.ts          Leitura de OFX e CSV
 proxy.ts                 Proteção de rotas (antigo middleware.ts do Next 15)
@@ -132,6 +174,7 @@ Por padrão os dados de acesso ficam em `.data/store.json` (ignorado pelo Git). 
    - `AUTH_SECRET` — chave de 32+ caracteres, diferente da usada em desenvolvimento
    - `ADMIN_USERNAME` e `ADMIN_PASSWORD`
    - `ADMIN_NAME`, `ADMIN_EMAIL` (opcionais)
+   - `RESEND_API_KEY`, `MAIL_FROM` e `APP_URL` para o e-mail de recuperação sair de verdade
    - `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` quando for usar o Supabase
    - deixe `DEMO_PASSWORD` **em branco** em produção
 3. Faça o deploy e troque a senha do administrador pelo painel no primeiro acesso.
