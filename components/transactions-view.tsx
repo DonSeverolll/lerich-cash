@@ -107,7 +107,7 @@ export function TransactionsView() {
               <Download className="h-4 w-4" />
               Exportar
             </Button>
-            <Button className="gap-2" onClick={() => toast.info('Cadastro manual disponível ao conectar o Supabase.')}>
+            <Button className="gap-2" onClick={() => toast.info('Cadastro manual ainda não implementado — os dados financeiros seguem em demonstração.')}>
               <Plus className="h-4 w-4" />
               Nova transação
             </Button>
@@ -224,14 +224,14 @@ export function TransactionsView() {
                         <div className="flex justify-end gap-2">
                           <button
                             aria-label="Editar transação"
-                            onClick={() => toast.info('Edição disponível ao conectar o Supabase.')}
+                            onClick={() => toast.info('Edição ainda não implementada — os dados financeiros seguem em demonstração.')}
                             className="rounded-lg border border-gold-500/20 p-2 text-onyx-300 transition hover:border-gold-500/50 hover:text-gold-200"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
                           <button
                             aria-label="Excluir transação"
-                            onClick={() => toast.info('Exclusão disponível ao conectar o Supabase.')}
+                            onClick={() => toast.info('Exclusão ainda não implementada — os dados financeiros seguem em demonstração.')}
                             className="rounded-lg border border-rose-500/25 p-2 text-rose-300 transition hover:bg-rose-500/15"
                           >
                             <Trash2 className="h-3.5 w-3.5" />

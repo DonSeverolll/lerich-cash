@@ -72,7 +72,7 @@ export function AccountsView() {
             <CardTitle>Contas bancárias</CardTitle>
             <CardDescription>Saldo consolidado por instituição</CardDescription>
           </div>
-          <Button className="gap-2" onClick={() => toast.info('Cadastro de contas disponível ao conectar o Supabase.')}>
+          <Button className="gap-2" onClick={() => toast.info('Cadastro de contas ainda não implementado — os dados financeiros seguem em demonstração.')}>
             <Plus className="h-4 w-4" />
             Nova conta
           </Button>

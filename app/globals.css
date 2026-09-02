@@ -11,20 +11,70 @@
   --gold-line: rgba(212, 175, 55, 0.18);
 }
 
+/*
+  O fundo fica no `html` para que o feixe (body::before, z-index -1) possa
+  ficar acima dele e ainda assim atrás de todo o conteúdo.
+*/
 html {
-  background: #050505;
-}
-
-body {
-  min-height: 100vh;
   background:
     radial-gradient(1100px circle at 15% -10%, rgba(212, 175, 55, 0.14), transparent 55%),
     radial-gradient(900px circle at 110% 10%, rgba(212, 175, 55, 0.07), transparent 50%),
     linear-gradient(180deg, #050505 0%, #0b0a07 55%, #050505 100%);
   background-attachment: fixed;
+}
+
+body {
+  min-height: 100vh;
+  background: transparent;
   color: #f6f1e4;
   font-family: var(--font-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
+}
+
+/*
+  Feixe de luz dourada: uma faixa larga e diagonal atravessando a tela.
+  Fica fixo, não captura cliques e respira devagar. As paradas do gradiente
+  são todas translúcidas, então o texto por cima continua legível.
+*/
+body::before {
+  content: '';
+  position: fixed;
+  top: -60vh;
+  left: -30vw;
+  width: 160vw;
+  height: 220vh;
+  z-index: -1;
+  pointer-events: none;
+  /*
+    A inclinação é fixa e só a opacidade pulsa. Animar `transform` num elemento
+    de 160vw × 220vh promoveria uma camada enorme no compositor; opacidade é
+    barata e dá o mesmo efeito de respiração.
+  */
+  transform: rotate(-8deg);
+  animation: feixe-dourado 18s ease-in-out infinite alternate;
+  /*
+    Faixa estreita e translúcida de propósito: os cartões do painel têm fundo
+    semitransparente, e um feixe largo vira um véu que derruba o contraste.
+  */
+  background: linear-gradient(
+    100deg,
+    transparent 44%,
+    rgba(212, 175, 55, 0.03) 46.5%,
+    rgba(233, 203, 109, 0.075) 49%,
+    rgba(250, 232, 170, 0.12) 50%,
+    rgba(233, 203, 109, 0.07) 51%,
+    rgba(212, 175, 55, 0.028) 53.5%,
+    transparent 56%
+  );
+}
+
+@keyframes feixe-dourado {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 0.95;
+  }
 }
 
 * {
@@ -70,4 +120,81 @@ body {
 
 .surface {
   background: linear-gradient(160deg, rgba(26, 24, 20, 0.92) 0%, rgba(9, 8, 6, 0.92) 100%);
+}
+
+/*
+  Marca: o olho do dragão dá uma cintilada curta a cada 10 segundos.
+  O logotipo é um PNG, então o brilho é uma camada sobreposta, posicionada
+  em porcentagem sobre a pupila — as coordenadas mudam entre o símbolo e o
+  lockup, por isso vêm em variáveis.
+*/
+.brand-logo {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+}
+
+.brand-eye {
+  position: absolute;
+  left: var(--eye-x);
+  top: var(--eye-y);
+  width: var(--eye-size);
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0;
+  /*
+    `translate` e `scale` separados do `transform`: assim a centralização
+    sobre a pupila continua valendo mesmo sem animação (reduced motion),
+    e os keyframes mexem só na escala.
+  */
+  translate: -50% -50%;
+  scale: 0.55;
+  background: radial-gradient(
+    circle,
+    rgba(255, 252, 240, 0.95) 0%,
+    rgba(255, 232, 160, 0.75) 28%,
+    rgba(212, 175, 55, 0.4) 55%,
+    transparent 72%
+  );
+  animation: cintilar-olho 10s ease-in-out infinite;
+}
+
+/* Duas piscadas rápidas no fim do ciclo; o resto do tempo fica apagado. */
+@keyframes cintilar-olho {
+  0%,
+  91% {
+    opacity: 0;
+    scale: 0.55;
+  }
+  93% {
+    opacity: 1;
+    scale: 1.25;
+  }
+  94.8% {
+    opacity: 0.25;
+    scale: 0.9;
+  }
+  96.2% {
+    opacity: 0.85;
+    scale: 1.1;
+  }
+  98.5%,
+  100% {
+    opacity: 0;
+    scale: 0.55;
+  }
+}
+
+/* Quem pediu menos movimento ao sistema não recebe a piscada do olho. */
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+    opacity: 0.8;
+  }
+
+  .brand-eye {
+    animation: none;
+  }
 }

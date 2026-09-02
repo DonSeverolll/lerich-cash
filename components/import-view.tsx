@@ -264,7 +264,7 @@ export function ImportView() {
                   disabled={!selecionados.length}
                   onClick={() =>
                     toast.success(
-                      `${selecionados.length} lançamento(s) prontos. Conecte o Supabase para gravar em lote.`,
+                      `${selecionados.length} lançamento(s) conferidos. A gravação em lote entra junto com os dados financeiros no Firestore.`,
                     )
                   }
                 >

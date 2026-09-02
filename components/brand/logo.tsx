@@ -1,35 +1,53 @@
+import type { CSSProperties } from 'react';
 import Image from 'next/image';
 
 import { cn } from '@/lib/utils';
 
 export const BRAND_NAME = 'Lerich Finance';
 
+/**
+ * Posição da pupila em cada arquivo, medida sobre a imagem original.
+ * O símbolo é quadrado (328×328) e o lockup é largo (869×585), então o olho
+ * cai em pontos diferentes — e o brilho precisa de tamanhos diferentes para
+ * cobrir a mesma área física.
+ */
+const OLHO_MARCA = { '--eye-x': '80.1%', '--eye-y': '17.2%', '--eye-size': '15%' } as CSSProperties;
+const OLHO_LOCKUP = { '--eye-x': '64.3%', '--eye-y': '12.1%', '--eye-size': '6.5%' } as CSSProperties;
+
 /** Símbolo (dragão) isolado — usado em ícones, sidebar e avatares da marca. */
 export function BrandMark({ size = 40, className }: { size?: number; className?: string }) {
   return (
-    <Image
-      src="/mark-lerich-finance.png"
-      alt=""
-      aria-hidden
-      width={size}
-      height={size}
-      priority
-      className={cn('select-none object-contain', className)}
-    />
+    <span className={cn('brand-logo', className)} style={{ width: size, height: size }}>
+      <Image
+        src="/mark-lerich-finance.png"
+        alt=""
+        aria-hidden
+        width={size}
+        height={size}
+        priority
+        className="select-none object-contain"
+      />
+      <span className="brand-eye" style={OLHO_MARCA} aria-hidden />
+    </span>
   );
 }
 
 /** Lockup completo: dragão + "LERICH FINANCE". */
 export function BrandLockup({ width = 280, className }: { width?: number; className?: string }) {
+  const height = Math.round((width * 585) / 869);
+
   return (
-    <Image
-      src="/logo-lerich-finance.png"
-      alt={BRAND_NAME}
-      width={width}
-      height={Math.round((width * 585) / 869)}
-      priority
-      className={cn('select-none object-contain', className)}
-    />
+    <span className={cn('brand-logo', className)} style={{ width, height }}>
+      <Image
+        src="/logo-lerich-finance.png"
+        alt={BRAND_NAME}
+        width={width}
+        height={height}
+        priority
+        className="select-none object-contain"
+      />
+      <span className="brand-eye" style={OLHO_LOCKUP} aria-hidden />
+    </span>
   );
 }
 
