@@ -3,7 +3,16 @@ import 'server-only';
 import { cert, getApps, initializeApp, type App } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 
-import type { AppSettings, AuditLog, PasswordReset, StoredUser } from '@/types';
+import type {
+  Account,
+  AppSettings,
+  AuditLog,
+  Category,
+  PasswordReset,
+  StoredUser,
+  Subscription,
+  Transaction,
+} from '@/types';
 
 import { defaultSettings, type StoreRepository } from './repository';
 
@@ -20,6 +29,15 @@ const COLECAO_AUDITORIA = 'auditoria';
 const COLECAO_CONFIG = 'configuracoes';
 const COLECAO_RESETS = 'recuperacoes';
 const DOC_CONFIG = 'app';
+
+/* Coleções financeiras — todos os documentos carregam `user_id`. */
+const COLECAO_CONTAS = 'contas';
+const COLECAO_CATEGORIAS = 'categorias';
+const COLECAO_ASSINATURAS = 'assinaturas';
+const COLECAO_TRANSACOES = 'transacoes';
+
+/** Limite de operações por lote no Firestore. */
+const TAMANHO_LOTE = 400;
 
 /** Campos derivados que só existem no documento, para permitir busca exata. */
 interface UserDoc extends StoredUser {
@@ -140,6 +158,42 @@ export function createFirestoreRepository(credenciais: CredenciaisFirebase): Sto
     return consulta.empty ? undefined : paraUsuario(consulta.docs[0].data());
   }
 
+  /* Helpers das coleções financeiras — todas seguem o mesmo formato. */
+
+  async function porUsuario<T>(colecao: string, userId: string): Promise<T[]> {
+    const consulta = await db.collection(colecao).where('user_id', '==', userId).get();
+    return consulta.docs.map((doc) => doc.data() as T);
+  }
+
+  async function todos<T>(colecao: string): Promise<T[]> {
+    const consulta = await db.collection(colecao).get();
+    return consulta.docs.map((doc) => doc.data() as T);
+  }
+
+  async function gravar(colecao: string, item: { id: string }): Promise<void> {
+    await db.collection(colecao).doc(item.id).set(item);
+  }
+
+  async function remover(colecao: string, id: string): Promise<void> {
+    await db.collection(colecao).doc(id).delete();
+  }
+
+  /** Apaga em lotes, para não estourar o limite de operações por commit. */
+  async function apagarPorUsuario(colecao: string, userId: string): Promise<void> {
+    for (;;) {
+      const consulta = await db
+        .collection(colecao)
+        .where('user_id', '==', userId)
+        .limit(TAMANHO_LOTE)
+        .get();
+      if (consulta.empty) return;
+
+      const lote = db.batch();
+      for (const doc of consulta.docs) lote.delete(doc.ref);
+      await lote.commit();
+    }
+  }
+
   return {
     driver: 'firestore',
 
@@ -215,6 +269,45 @@ export function createFirestoreRepository(credenciais: CredenciaisFirebase): Sto
       const lote = db.batch();
       for (const doc of consulta.docs) lote.delete(doc.ref);
       await lote.commit();
+    },
+
+    /* ----- Dados financeiros ----- */
+
+    listAccounts: (userId) => porUsuario<Account>(COLECAO_CONTAS, userId),
+    saveAccount: (account) => gravar(COLECAO_CONTAS, account),
+    removeAccount: (id) => remover(COLECAO_CONTAS, id),
+
+    listCategories: (userId) => porUsuario<Category>(COLECAO_CATEGORIAS, userId),
+    saveCategory: (category) => gravar(COLECAO_CATEGORIAS, category),
+    removeCategory: (id) => remover(COLECAO_CATEGORIAS, id),
+
+    listSubscriptions: (userId) => porUsuario<Subscription>(COLECAO_ASSINATURAS, userId),
+    saveSubscription: (subscription) => gravar(COLECAO_ASSINATURAS, subscription),
+    removeSubscription: (id) => remover(COLECAO_ASSINATURAS, id),
+
+    listTransactions: (userId) => porUsuario<Transaction>(COLECAO_TRANSACOES, userId),
+    saveTransaction: (transaction) => gravar(COLECAO_TRANSACOES, transaction),
+    removeTransaction: (id) => remover(COLECAO_TRANSACOES, id),
+
+    async saveTransactions(transactions) {
+      // O Firestore aceita no máximo 500 operações por lote.
+      for (let i = 0; i < transactions.length; i += TAMANHO_LOTE) {
+        const lote = db.batch();
+        for (const transaction of transactions.slice(i, i + TAMANHO_LOTE)) {
+          lote.set(db.collection(COLECAO_TRANSACOES).doc(transaction.id), transaction);
+        }
+        await lote.commit();
+      }
+    },
+
+    listAllAccounts: () => todos<Account>(COLECAO_CONTAS),
+    listAllTransactions: () => todos<Transaction>(COLECAO_TRANSACOES),
+    listAllSubscriptions: () => todos<Subscription>(COLECAO_ASSINATURAS),
+
+    async removeFinanceDataOfUser(userId) {
+      for (const colecao of [COLECAO_CONTAS, COLECAO_CATEGORIAS, COLECAO_ASSINATURAS, COLECAO_TRANSACOES]) {
+        await apagarPorUsuario(colecao, userId);
+      }
     },
 
     gravacaoDisponivel() {

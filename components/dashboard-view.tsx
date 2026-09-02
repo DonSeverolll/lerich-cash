@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowDownRight, ArrowUpRight, Clock3, PiggyBank, TrendingUp, Wallet } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { ArrowDownRight, ArrowUpRight, Clock3, LayoutDashboard, LoaderCircle, PiggyBank, Sparkles, TrendingUp, Wallet } from 'lucide-react';
 import {
   Bar,
   BarChart,
@@ -19,7 +21,8 @@ import {
   YAxis,
 } from 'recharts';
 
-import { availableMonths, mockAccounts, mockCategories, mockSubscriptions, mockTransactions } from '@/lib/mock-data';
+import type { DadosFinanceiros } from '@/types';
+
 import {
   chartAxis,
   chartGrid,
@@ -33,21 +36,35 @@ import { currencyBRL } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Select } from '@/components/ui/select';
 import { StatCard } from '@/components/ui/stat-card';
+import { chamarApi } from '@/lib/api-client';
 
 function monthKeyLabel(key: string) {
   const [ano, mes] = key.split('-').map(Number);
   return new Intl.DateTimeFormat('pt-BR', { month: 'short', year: '2-digit' }).format(new Date(ano, mes - 1, 1));
 }
 
-export function DashboardView() {
-  const months = useMemo(() => availableMonths(), []);
+export function DashboardView({ dados }: { dados: DadosFinanceiros }) {
+  const router = useRouter();
+  const [populando, setPopulando] = useState(false);
+  const { contas: mockAccounts, categorias: mockCategories, assinaturas: mockSubscriptions, transacoes: mockTransactions } = dados;
+
+  /** Meses com movimento, do mais recente para o mais antigo; sempre inclui o atual. */
+  const months = useMemo(() => {
+    const agora = new Date();
+    const atual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`;
+    const chaves = new Set(mockTransactions.map((tx) => tx.data_transacao.slice(0, 7)));
+    chaves.add(atual);
+    return [...chaves].sort((a, b) => b.localeCompare(a));
+  }, [mockTransactions]);
+
   const [selectedMonth, setSelectedMonth] = useState(months[0]);
 
   const doMes = useMemo(
     () => mockTransactions.filter((tx) => tx.data_transacao.startsWith(selectedMonth)),
-    [selectedMonth],
+    [mockTransactions, selectedMonth],
   );
 
   const receitasMes = doMes.filter((tx) => tx.tipo === 'RECEITA').reduce((sum, tx) => sum + tx.valor, 0);
@@ -59,7 +76,14 @@ export function DashboardView() {
     .filter((item) => item.ativo)
     .reduce((sum, item) => sum + item.valor, 0);
 
-  const saldoConsolidado = mockAccounts.reduce((sum, account) => sum + account.saldo_inicial, 0);
+  // Saldo real: saldo inicial de cada conta mais o efeito de todos os lançamentos.
+  const saldoConsolidado = useMemo(() => {
+    const movimento = mockTransactions.reduce(
+      (soma, tx) => soma + (tx.tipo === 'RECEITA' ? tx.valor : -tx.valor),
+      0,
+    );
+    return mockAccounts.reduce((soma, conta) => soma + conta.saldo_inicial, 0) + movimento;
+  }, [mockAccounts, mockTransactions]);
   const pendentes = doMes.filter((tx) => tx.status === 'PENDENTE');
 
   // Comparação com o mês anterior. Se o mês selecionado ainda está em curso,
@@ -93,7 +117,7 @@ export function DashboardView() {
           const despesas = doPeriodo.filter((tx) => tx.tipo === 'DESPESA').reduce((sum, tx) => sum + tx.valor, 0);
           return { name: monthKeyLabel(key), receitas, despesas, saldo: receitas - despesas };
         }),
-    [months],
+    [months, mockTransactions],
   );
 
   const despesasPorCategoria = useMemo(
@@ -109,7 +133,7 @@ export function DashboardView() {
         }))
         .filter((item) => item.value > 0)
         .sort((a, b) => b.value - a.value),
-    [doMes],
+    [doMes, mockCategories],
   );
 
   const maiorCategoria = despesasPorCategoria[0];
@@ -121,6 +145,41 @@ export function DashboardView() {
       return distancia(a.dia_vencimento) - distancia(b.dia_vencimento);
     })
     .slice(0, 4);
+
+  async function popularExemplo() {
+    setPopulando(true);
+    const resposta = await chamarApi<{ total: number }>('/api/financas/exemplo', { method: 'POST' });
+    setPopulando(false);
+
+    if (!resposta.ok) {
+      toast.error(resposta.erro);
+      return;
+    }
+
+    toast.success(`${resposta.dados.total} lançamentos de exemplo criados.`);
+    router.refresh();
+  }
+
+  if (!mockTransactions.length) {
+    return (
+      <EmptyState
+        icone={<LayoutDashboard className="h-6 w-6" />}
+        titulo="Seu painel está pronto, falta o movimento"
+        descricao="Cadastre uma conta e lance suas receitas e despesas — ou comece com dados de exemplo para ver como tudo funciona."
+        acao={
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button asChild>
+              <Link href="/contas">Cadastrar conta</Link>
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={popularExemplo} disabled={populando}>
+              {populando ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              Usar dados de exemplo
+            </Button>
+          </div>
+        }
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">

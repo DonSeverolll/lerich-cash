@@ -141,3 +141,19 @@ export interface PasswordReset {
 
 /** Onde o store está guardando os dados nesta instância. */
 export type StoreDriver = 'firestore' | 'arquivo' | 'memoria';
+
+/** Conjunto financeiro de um cliente, carregado de uma vez pelas telas. */
+export interface DadosFinanceiros {
+  contas: Account[];
+  categorias: Category[];
+  assinaturas: Subscription[];
+  transacoes: Transaction[];
+}
+
+/** Agregados de todos os clientes, mostrados no painel administrativo. */
+export interface ResumoGlobal {
+  custodia: number;
+  volumeTransacionado: number;
+  recorrenteMensal: number;
+  totalTransacoes: number;
+}

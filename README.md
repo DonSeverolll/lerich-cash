@@ -86,11 +86,11 @@ Na etapa de confirmação o endereço aparece parcialmente mascarado — `ma•�
 
 ### Painel do cliente (`/dashboard`)
 
-- **Dashboard** — seletor de mês, saldo consolidado, receitas/despesas, resultado e taxa de poupança, fluxo mensal, distribuição por categoria, evolução do resultado e alerta de lançamentos pendentes.
-- **Transações** — busca, filtros (tipo, conta, status), ordenação, paginação e exportação CSV.
-- **Assinaturas** — comprometimento mensal, vencimentos dos próximos 7 dias, impacto de cada serviço e pausar/reativar.
-- **Contas** — patrimônio consolidado, entradas/saídas e participação de cada conta.
-- **Importar extrato** — leitura de OFX e CSV com pré-visualização, escolha de conta/categoria por lançamento e conciliação antes de confirmar.
+- **Dashboard** — seletor de mês, saldo consolidado, receitas/despesas, resultado e taxa de poupança, fluxo mensal, distribuição por categoria, evolução do resultado e alerta de pendências.
+- **Transações** — criar, editar, excluir e alternar status; busca, filtros, ordenação, paginação e exportação CSV.
+- **Assinaturas** — cadastrar, editar, pausar, remover e lançar no mês (sem duplicar); comprometimento mensal e vencimentos próximos.
+- **Contas** — cadastrar, editar e remover; saldo calculado do saldo inicial mais os lançamentos, com participação de cada conta.
+- **Importar extrato** — leitura de OFX e CSV, conciliação lançamento a lançamento e gravação em lote.
 - **Meu perfil** — dados da conta e troca de senha.
 
 ## Segurança
@@ -130,6 +130,7 @@ app/
   api/auth/...           Login, logout, cadastro e recuperação de senha
   api/admin/...          Usuários e configurações (somente ADMIN)
   api/account/password   Troca de senha do próprio usuário
+  api/financas/...       CRUD financeiro do cliente da sessão
   login/                 Tela de acesso
   cadastro/              Abertura de conta pelo cliente
   recuperar-senha/       Recuperação em 3 etapas
@@ -142,9 +143,10 @@ lib/
   auth/                  Criptografia, token de sessão e helpers de servidor
   server/
     store/               Store: regras de negócio + drivers (Firestore, arquivo)
+      financas.ts        Contas, categorias, assinaturas e transações
     mailer.ts            Envio de e-mail transacional
     rate-limit.ts        Limite de tentativas
-  mock-data.ts           Dados de demonstração gerados a partir do mês atual
+  api-client.ts          Chamadas às rotas de API, com erro traduzido
   ofx-parser.ts          Leitura de OFX e CSV
 proxy.ts                 Proteção de rotas (antigo middleware.ts do Next 15)
 firebase/                Regras do Firestore e notas de configuração
@@ -266,4 +268,4 @@ node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
 
 Ao colar a chave privada na Vercel, mantenha as aspas e os `\n` — o campo aceita o valor em uma linha só.
 
-Os dados financeiros exibidos hoje são de demonstração (`lib/mock-data.ts`), gerados a partir do mês corrente para que o painel nunca apareça vazio. Migrá-los para o Firestore é o próximo passo natural, seguindo o mesmo padrão de driver já usado no store.
+Os dados financeiros ficam no mesmo store: contas, categorias, assinaturas e transações são gravadas por cliente, e cada consulta filtra por `user_id`. Uma conta nova recebe um conjunto inicial de categorias, e o painel oferece popular com dados de exemplo — só em conta vazia, para não misturar exemplo com dado real.

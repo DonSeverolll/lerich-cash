@@ -4,9 +4,7 @@ import Link from 'next/link';
 import { Activity, AlertTriangle, Crown, Database, ShieldCheck, UserCheck, Users } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
-import type { AppUser, AuditLog, StoreDriver } from '@/types';
-
-import { mockAccounts, mockSubscriptions, mockTransactions } from '@/lib/mock-data';
+import type { AppUser, AuditLog, ResumoGlobal, StoreDriver } from '@/types';
 import { currencyBRL } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,6 +38,7 @@ interface AdminOverviewProps {
   users: AppUser[];
   audit: AuditLog[];
   driver: StoreDriver;
+  resumo: ResumoGlobal;
 }
 
 const avisoDriver: Record<StoreDriver, { texto: string; alerta: boolean }> = {
@@ -59,16 +58,14 @@ const avisoDriver: Record<StoreDriver, { texto: string; alerta: boolean }> = {
   },
 };
 
-export function AdminOverview({ users, audit, driver }: AdminOverviewProps) {
+export function AdminOverview({ users, audit, driver, resumo }: AdminOverviewProps) {
   const aviso = avisoDriver[driver];
   const clientes = users.filter((user) => user.role === 'CLIENTE');
   const ativos = users.filter((user) => user.status === 'ATIVO');
   const admins = users.filter((user) => user.role === 'ADMIN');
   const premium = users.filter((user) => user.plano !== 'FREE');
 
-  const volumeTransacionado = mockTransactions.reduce((sum, item) => sum + item.valor, 0);
-  const custodia = mockAccounts.reduce((sum, item) => sum + item.saldo_inicial, 0);
-  const recorrente = mockSubscriptions.reduce((sum, item) => sum + item.valor, 0);
+  const { custodia, volumeTransacionado, recorrenteMensal: recorrente, totalTransacoes } = resumo;
 
   const planos = (['FREE', 'PRO', 'PREMIUM'] as const)
     .map((plano, index) => ({
@@ -99,7 +96,7 @@ export function AdminOverview({ users, audit, driver }: AdminOverviewProps) {
         <StatCard title="Usuários" value={String(users.length)} hint={`${admins.length} administrador(es)`} icon={<Users className="h-5 w-5" />} />
         <StatCard title="Clientes ativos" value={String(ativos.filter((u) => u.role === 'CLIENTE').length)} hint={`${clientes.length} no total`} icon={<UserCheck className="h-5 w-5" />} tone="success" />
         <StatCard title="Planos pagos" value={String(premium.length)} hint="PRO + PREMIUM" icon={<Crown className="h-5 w-5" />} tone="gold" />
-        <StatCard title="Volume em custódia" value={currencyBRL(custodia)} hint={`${currencyBRL(volumeTransacionado)} movimentados`} icon={<Activity className="h-5 w-5" />} />
+        <StatCard title="Volume em custódia" value={currencyBRL(custodia)} hint={`${currencyBRL(volumeTransacionado)} em ${totalTransacoes} lançamento(s)`} icon={<Activity className="h-5 w-5" />} />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
@@ -239,8 +236,9 @@ export function AdminOverview({ users, audit, driver }: AdminOverviewProps) {
         <CardContent className="pt-0">
           <p className="font-display text-4xl text-gold-gradient">{currencyBRL(recorrente)}</p>
           <p className="mt-2 text-sm text-onyx-400">
-            Projeção anual de {currencyBRL(recorrente * 12)} em despesas recorrentes acompanhadas pela
-            plataforma.
+            {recorrente
+              ? `Projeção anual de ${currencyBRL(recorrente * 12)} em despesas recorrentes acompanhadas pela plataforma.`
+              : 'Nenhuma assinatura ativa cadastrada pelos clientes ainda.'}
           </p>
         </CardContent>
       </Card>

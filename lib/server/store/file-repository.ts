@@ -3,7 +3,16 @@ import 'server-only';
 import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import type { AppSettings, AuditLog, PasswordReset, StoredUser } from '@/types';
+import type {
+  Account,
+  AppSettings,
+  AuditLog,
+  Category,
+  PasswordReset,
+  StoredUser,
+  Subscription,
+  Transaction,
+} from '@/types';
 
 import { defaultSettings, type StoreDriver, type StoreRepository } from './repository';
 
@@ -20,6 +29,10 @@ interface StoreShape {
   audit: AuditLog[];
   resets: PasswordReset[];
   settings: AppSettings;
+  accounts: Account[];
+  categories: Category[];
+  subscriptions: Subscription[];
+  transactions: Transaction[];
 }
 
 let cache: StoreShape | null = null;
@@ -28,7 +41,16 @@ let cachedMtimeMs = -1;
 let gravacaoOk = true;
 
 function emptyStore(): StoreShape {
-  return { users: [], audit: [], resets: [], settings: { ...defaultSettings } };
+  return {
+    users: [],
+    audit: [],
+    resets: [],
+    settings: { ...defaultSettings },
+    accounts: [],
+    categories: [],
+    subscriptions: [],
+    transactions: [],
+  };
 }
 
 /**
@@ -47,6 +69,10 @@ function load(): StoreShape {
       audit: parsed.audit ?? [],
       resets: parsed.resets ?? [],
       settings: { ...defaultSettings, ...(parsed.settings ?? {}) },
+      accounts: parsed.accounts ?? [],
+      categories: parsed.categories ?? [],
+      subscriptions: parsed.subscriptions ?? [],
+      transactions: parsed.transactions ?? [],
     };
     cachedMtimeMs = mtimeMs;
   } catch {
@@ -71,6 +97,26 @@ function persist() {
 /** Cópia rasa, para que o chamador não altere o cache por referência. */
 function copia<T>(valor: T): T {
   return structuredClone(valor);
+}
+
+/** Coleções financeiras: todas guardam itens com `id` e `user_id`. */
+type ColecaoFinanceira = 'accounts' | 'categories' | 'subscriptions' | 'transactions';
+
+function gravarEm<T extends { id: string }>(colecao: ColecaoFinanceira, item: T) {
+  const store = load();
+  const lista = store[colecao] as unknown as T[];
+  const indice = lista.findIndex((atual) => atual.id === item.id);
+  if (indice >= 0) lista[indice] = copia(item);
+  else lista.push(copia(item));
+  persist();
+}
+
+function removerDe(colecao: ColecaoFinanceira, id: string) {
+  const store = load();
+  const lista = store[colecao] as unknown as { id: string }[];
+  const filtrada = lista.filter((item) => item.id !== id);
+  (store[colecao] as unknown as { id: string }[]) = filtrada;
+  persist();
 }
 
 export function createFileRepository(): StoreRepository {
@@ -155,6 +201,87 @@ export function createFileRepository(): StoreRepository {
     async purgeResetsBefore(instante) {
       const store = load();
       store.resets = store.resets.filter((reset) => Date.parse(reset.expires_at) > instante);
+      persist();
+    },
+
+    /* ----- Dados financeiros ----- */
+
+    async listAccounts(userId) {
+      return copia(load().accounts.filter((item) => item.user_id === userId));
+    },
+
+    async saveAccount(account) {
+      gravarEm('accounts', account);
+    },
+
+    async removeAccount(id) {
+      removerDe('accounts', id);
+    },
+
+    async listCategories(userId) {
+      return copia(load().categories.filter((item) => item.user_id === userId));
+    },
+
+    async saveCategory(category) {
+      gravarEm('categories', category);
+    },
+
+    async removeCategory(id) {
+      removerDe('categories', id);
+    },
+
+    async listSubscriptions(userId) {
+      return copia(load().subscriptions.filter((item) => item.user_id === userId));
+    },
+
+    async saveSubscription(subscription) {
+      gravarEm('subscriptions', subscription);
+    },
+
+    async removeSubscription(id) {
+      removerDe('subscriptions', id);
+    },
+
+    async listTransactions(userId) {
+      return copia(load().transactions.filter((item) => item.user_id === userId));
+    },
+
+    async saveTransaction(transaction) {
+      gravarEm('transactions', transaction);
+    },
+
+    async saveTransactions(transactions) {
+      const store = load();
+      for (const transaction of transactions) {
+        const indice = store.transactions.findIndex((item) => item.id === transaction.id);
+        if (indice >= 0) store.transactions[indice] = copia(transaction);
+        else store.transactions.push(copia(transaction));
+      }
+      persist();
+    },
+
+    async removeTransaction(id) {
+      removerDe('transactions', id);
+    },
+
+    async listAllAccounts() {
+      return copia(load().accounts);
+    },
+
+    async listAllTransactions() {
+      return copia(load().transactions);
+    },
+
+    async listAllSubscriptions() {
+      return copia(load().subscriptions);
+    },
+
+    async removeFinanceDataOfUser(userId) {
+      const store = load();
+      store.accounts = store.accounts.filter((item) => item.user_id !== userId);
+      store.categories = store.categories.filter((item) => item.user_id !== userId);
+      store.subscriptions = store.subscriptions.filter((item) => item.user_id !== userId);
+      store.transactions = store.transactions.filter((item) => item.user_id !== userId);
       persist();
     },
 

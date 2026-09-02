@@ -46,18 +46,18 @@ body::before {
   z-index: -1;
   pointer-events: none;
   /*
-    A inclinação é fixa e só a opacidade pulsa. Animar `transform` num elemento
-    de 160vw × 220vh promoveria uma camada enorme no compositor; opacidade é
-    barata e dá o mesmo efeito de respiração.
+    O ângulo do gradiente define a inclinação: a 75deg a faixa corre do alto à
+    esquerda para baixo à direita, 75 graus acima da horizontal. Só a opacidade
+    pulsa — animar `transform` num elemento de 160vw × 220vh promoveria uma
+    camada enorme no compositor.
   */
-  transform: rotate(-8deg);
   animation: feixe-dourado 18s ease-in-out infinite alternate;
   /*
     Faixa estreita e translúcida de propósito: os cartões do painel têm fundo
     semitransparente, e um feixe largo vira um véu que derruba o contraste.
   */
   background: linear-gradient(
-    100deg,
+    75deg,
     transparent 44%,
     rgba(212, 175, 55, 0.03) 46.5%,
     rgba(233, 203, 109, 0.075) 49%,

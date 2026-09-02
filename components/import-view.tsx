@@ -1,24 +1,28 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ArrowUpToLine, CheckCircle2, FileText, Trash2, TriangleAlert } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { ImportPreviewItem } from '@/types';
+import type { Account, Category, ImportPreviewItem } from '@/types';
 
-import { mockAccounts, mockCategories } from '@/lib/mock-data';
+import { chamarApi } from '@/lib/api-client';
 import { parseBankStatement } from '@/lib/ofx-parser';
 import { currencyBRL, formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
-export function ImportView() {
+export function ImportView({ contas, categorias }: { contas: Account[]; categorias: Category[] }) {
+  const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [gravando, setGravando] = useState(false);
   const [items, setItems] = useState<ImportPreviewItem[]>([]);
   const [aprovados, setAprovados] = useState<Set<string>>(new Set());
   const [isDragging, setIsDragging] = useState(false);
@@ -79,9 +83,51 @@ export function ImportView() {
   }
 
   const selecionados = items.filter((item) => aprovados.has(item.id));
+
+  /** Grava em lote os lançamentos conferidos. */
+  async function confirmar() {
+    const semVinculo = selecionados.filter((item) => !item.conta_id || !item.categoria_id);
+    if (semVinculo.length) {
+      toast.error(`${semVinculo.length} lançamento(s) ainda sem conta ou categoria.`);
+      return;
+    }
+
+    setGravando(true);
+    const resposta = await chamarApi<{ total: number }>('/api/financas/importar', {
+      method: 'POST',
+      body: JSON.stringify({ itens: selecionados }),
+    });
+    setGravando(false);
+
+    if (!resposta.ok) {
+      toast.error(resposta.erro);
+      return;
+    }
+
+    toast.success(`${resposta.dados.total} lançamento(s) importado(s).`);
+    setItems([]);
+    setAprovados(new Set());
+    setArquivo(null);
+    router.refresh();
+  }
   const totalReceitas = selecionados.filter((i) => i.tipo === 'RECEITA').reduce((s, i) => s + i.valor, 0);
   const totalDespesas = selecionados.filter((i) => i.tipo === 'DESPESA').reduce((s, i) => s + i.valor, 0);
   const semCategoria = selecionados.filter((item) => !item.categoria_id).length;
+
+  if (!contas.length) {
+    return (
+      <EmptyState
+        icone={<ArrowUpToLine className="h-6 w-6" />}
+        titulo="Cadastre uma conta primeiro"
+        descricao="Os lançamentos importados precisam ser atribuídos a uma conta."
+        acao={
+          <Button asChild>
+            <a href="/contas">Ir para Contas</a>
+          </Button>
+        }
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -193,7 +239,7 @@ export function ImportView() {
                       onChange={(event) => atualizar(item.id, { conta_id: event.target.value || undefined })}
                     >
                       <option value="">Conta…</option>
-                      {mockAccounts.map((account) => (
+                      {contas.map((account) => (
                         <option key={account.id} value={account.id}>
                           {account.nome}
                         </option>
@@ -207,7 +253,7 @@ export function ImportView() {
                       onChange={(event) => atualizar(item.id, { categoria_id: event.target.value || undefined })}
                     >
                       <option value="">Categoria…</option>
-                      {mockCategories
+                      {categorias
                         .filter((category) => category.tipo === item.tipo)
                         .map((category) => (
                           <option key={category.id} value={category.id}>
@@ -260,15 +306,8 @@ export function ImportView() {
                 >
                   Limpar
                 </Button>
-                <Button
-                  disabled={!selecionados.length}
-                  onClick={() =>
-                    toast.success(
-                      `${selecionados.length} lançamento(s) conferidos. A gravação em lote entra junto com os dados financeiros no Firestore.`,
-                    )
-                  }
-                >
-                  Confirmar importação
+                <Button disabled={!selecionados.length || gravando} onClick={confirmar}>
+                  {gravando ? 'Gravando…' : 'Confirmar importação'}
                 </Button>
               </div>
             </div>

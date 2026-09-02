@@ -22,43 +22,14 @@ import type {
 
 import { hashPassword, hashToken, randomId, verifyPassword } from '@/lib/auth/crypto';
 
-import { createFileRepository } from './file-repository';
-import { createFirestoreRepository, lerCredenciaisFirebase } from './firestore-repository';
-import type { StoreDriver, StoreRepository } from './repository';
+import { repo } from './driver';
+import type { StoreRepository } from './repository';
 
 export type { StoreDriver } from './repository';
+export { storeDriver, isPersistenceAvailable } from './driver';
 
-/* ---------- Escolha do driver ---------- */
-
-let repositorio: StoreRepository | null = null;
-
-function repo(): StoreRepository {
-  if (repositorio) return repositorio;
-
-  const credenciais = lerCredenciaisFirebase();
-
-  if (credenciais) {
-    try {
-      repositorio = createFirestoreRepository(credenciais);
-      return repositorio;
-    } catch (causa) {
-      // Credencial presente mas inválida: avisamos alto e seguimos em arquivo,
-      // para o site não ficar fora do ar por erro de configuração.
-      console.error('[lerich-finance] Falha ao conectar no Firestore, usando arquivo local:', causa);
-    }
-  }
-
-  repositorio = createFileRepository();
-  return repositorio;
-}
-
-export function storeDriver(): StoreDriver {
-  return repo().driver;
-}
-
-export function isPersistenceAvailable(): boolean {
-  return repo().gravacaoDisponivel();
-}
+/** Dados financeiros de cada cliente. */
+export * from './financas';
 
 /* ---------- Seed ---------- */
 /**
@@ -281,6 +252,8 @@ export async function deleteUser(id: string): Promise<AppUser> {
   }
 
   await store.removeUser(id);
+  // Sem isso, contas e lançamentos ficariam órfãos no banco.
+  await store.removeFinanceDataOfUser(id);
   return toPublicUser(alvo);
 }
 
