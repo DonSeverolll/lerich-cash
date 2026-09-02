@@ -55,6 +55,40 @@
   /* Texto que fica sobre o acento cheio (botão primário, avatar) */
   --acento-texto: 5 5 5;
 
+  /* Tons de estado: claros, para contrastar com o fundo preto */
+  --emerald-50: 236 253 245;
+  --emerald-100: 209 250 229;
+  --emerald-200: 167 243 208;
+  --emerald-300: 110 231 183;
+  --emerald-400: 52 211 153;
+  --emerald-500: 16 185 129;
+  --emerald-600: 5 150 105;
+  --emerald-700: 4 120 87;
+  --emerald-800: 6 95 70;
+  --emerald-900: 6 78 59;
+
+  --rose-50: 255 241 242;
+  --rose-100: 255 228 230;
+  --rose-200: 254 205 211;
+  --rose-300: 253 164 175;
+  --rose-400: 251 113 133;
+  --rose-500: 244 63 94;
+  --rose-600: 225 29 72;
+  --rose-700: 190 18 60;
+  --rose-800: 159 18 57;
+  --rose-900: 136 19 55;
+
+  --amber-50: 255 251 235;
+  --amber-100: 254 243 199;
+  --amber-200: 253 230 138;
+  --amber-300: 252 211 77;
+  --amber-400: 251 191 36;
+  --amber-500: 245 158 11;
+  --amber-600: 217 119 6;
+  --amber-700: 180 83 9;
+  --amber-800: 146 64 14;
+  --amber-900: 120 53 15;
+
   /* Superfície dos cartões e trilho da barra de rolagem */
   --superficie-de: 26 24 20;
   --superficie-para: 9 8 6;
@@ -105,6 +139,40 @@
   --sombra: 90 100 115;
 
   --acento-texto: 255 255 255;
+
+  /* No claro os tons de estado escurecem o suficiente para serem legíveis */
+  --emerald-50: 6 95 70;
+  --emerald-100: 6 95 70;
+  --emerald-200: 4 120 87;
+  --emerald-300: 4 120 87;
+  --emerald-400: 5 150 105;
+  --emerald-500: 16 185 129;
+  --emerald-600: 52 211 153;
+  --emerald-700: 110 231 183;
+  --emerald-800: 167 243 208;
+  --emerald-900: 209 250 229;
+
+  --rose-50: 159 18 57;
+  --rose-100: 159 18 57;
+  --rose-200: 190 18 60;
+  --rose-300: 190 18 60;
+  --rose-400: 225 29 72;
+  --rose-500: 244 63 94;
+  --rose-600: 251 113 133;
+  --rose-700: 253 164 175;
+  --rose-800: 254 205 211;
+  --rose-900: 255 228 230;
+
+  --amber-50: 146 64 14;
+  --amber-100: 146 64 14;
+  --amber-200: 180 83 9;
+  --amber-300: 180 83 9;
+  --amber-400: 217 119 6;
+  --amber-500: 245 158 11;
+  --amber-600: 251 191 36;
+  --amber-700: 252 211 77;
+  --amber-800: 253 230 138;
+  --amber-900: 254 243 199;
 
   --superficie-de: 255 255 255;
   --superficie-para: 240 242 246;

@@ -28,6 +28,11 @@ const config: Config = {
         foreground: canal('texto'),
         gold: escala('gold', [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]),
         onyx: escala('onyx', [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]),
+        // Tons de estado: sobrescrevem os fixos do Tailwind para acompanharem
+        // o tema. Sem isso, `text-rose-300` fica ilegível no modo claro.
+        emerald: escala('emerald', [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]),
+        rose: escala('rose', [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]),
+        amber: escala('amber', [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]),
       },
       borderRadius: {
         xl: '1rem',
