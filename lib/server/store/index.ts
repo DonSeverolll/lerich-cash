@@ -1,15 +1,12 @@
 /**
- * Persistência de usuários, auditoria e configurações.
+ * Store de usuários, auditoria e configurações.
  *
- * Usa um arquivo JSON em `.data/` (criado no primeiro uso). Em ambientes com
- * sistema de arquivos somente-leitura (serverless), degrada para memória — os
- * dados vivem enquanto a instância existir. Para produção multi-instância,
- * troque este módulo pela implementação Supabase (ver README).
+ * Esta camada concentra as regras de negócio; onde os dados ficam é decidido
+ * pelo ambiente: havendo credencial do Firebase, usa Firestore; caso
+ * contrário, cai no arquivo local `.data/store.json`. A API pública é a mesma
+ * nos dois casos, então nada acima daqui muda.
  */
 import 'server-only';
-
-import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
 
 import type {
   AppSettings,
@@ -25,95 +22,69 @@ import type {
 
 import { hashPassword, hashToken, randomId, verifyPassword } from '@/lib/auth/crypto';
 
-const DATA_FILE = join(process.cwd(), '.data', 'store.json');
+import { createFileRepository } from './file-repository';
+import { createFirestoreRepository, lerCredenciaisFirebase } from './firestore-repository';
+import type { StoreDriver, StoreRepository } from './repository';
 
-interface StoreShape {
-  users: StoredUser[];
-  audit: AuditLog[];
-  resets: PasswordReset[];
-  settings: AppSettings;
-}
+export type { StoreDriver } from './repository';
 
-const defaultSettings: AppSettings = {
-  nomeMarca: 'Lerich Finance',
-  moeda: 'BRL',
-  permitirCadastroPublico: true,
-  limiteContasPorCliente: 10,
-  avisoManutencao: '',
-};
+/* ---------- Escolha do driver ---------- */
 
-let cache: StoreShape | null = null;
-/** mtime do arquivo já refletido em `cache`. */
-let cachedMtimeMs = -1;
-let persistenceAvailable = true;
-let seeding: Promise<void> | null = null;
+let repositorio: StoreRepository | null = null;
 
-function emptyStore(): StoreShape {
-  return { users: [], audit: [], resets: [], settings: { ...defaultSettings } };
-}
+function repo(): StoreRepository {
+  if (repositorio) return repositorio;
 
-/**
- * Lê o arquivo quando ele mudou desde a última leitura. Em desenvolvimento o
- * Next mantém instâncias separadas deste módulo por bundle; sem essa
- * revalidação por mtime, uma rota enxergaria dados escritos por outra.
- */
-function load(): StoreShape {
-  try {
-    const { mtimeMs } = statSync(DATA_FILE);
-    if (cache && mtimeMs === cachedMtimeMs) return cache;
+  const credenciais = lerCredenciaisFirebase();
 
-    const parsed = JSON.parse(readFileSync(DATA_FILE, 'utf8')) as Partial<StoreShape>;
-    cache = {
-      users: parsed.users ?? [],
-      audit: parsed.audit ?? [],
-      resets: parsed.resets ?? [],
-      settings: { ...defaultSettings, ...(parsed.settings ?? {}) },
-    };
-    cachedMtimeMs = mtimeMs;
-  } catch {
-    // Arquivo ausente ou ilegível: mantém o que já estiver em memória.
-    cache ??= emptyStore();
+  if (credenciais) {
+    try {
+      repositorio = createFirestoreRepository(credenciais);
+      return repositorio;
+    } catch (causa) {
+      // Credencial presente mas inválida: avisamos alto e seguimos em arquivo,
+      // para o site não ficar fora do ar por erro de configuração.
+      console.error('[lerich-finance] Falha ao conectar no Firestore, usando arquivo local:', causa);
+    }
   }
 
-  return cache;
+  repositorio = createFileRepository();
+  return repositorio;
 }
 
-function persist() {
-  if (!cache || !persistenceAvailable) return;
-  try {
-    mkdirSync(dirname(DATA_FILE), { recursive: true });
-    writeFileSync(DATA_FILE, JSON.stringify(cache, null, 2), 'utf8');
-    cachedMtimeMs = statSync(DATA_FILE).mtimeMs;
-  } catch {
-    // Sistema de arquivos indisponível: seguimos apenas em memória.
-    persistenceAvailable = false;
-  }
+export function storeDriver(): StoreDriver {
+  return repo().driver;
+}
+
+export function isPersistenceAvailable(): boolean {
+  return repo().gravacaoDisponivel();
 }
 
 /* ---------- Seed ---------- */
 /**
  * Nenhuma credencial fica no código: o administrador inicial só é criado se
- * ADMIN_USERNAME e ADMIN_PASSWORD estiverem no ambiente (.env.local em
- * desenvolvimento, variáveis de projeto em produção). Sem elas, o sistema sobe
- * sem administrador — falha fechada, em vez de expor um acesso padrão.
+ * ADMIN_USERNAME e ADMIN_PASSWORD estiverem no ambiente. Sem elas, o sistema
+ * sobe sem administrador — falha fechada, em vez de expor um acesso padrão.
+ *
+ * Os ids são fixos para que duas instâncias subindo ao mesmo tempo gravem o
+ * mesmo documento em vez de criarem administradores duplicados.
  */
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME?.trim();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const ADMIN_NAME = process.env.ADMIN_NAME?.trim() || 'Administrador';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL?.trim() || 'admin@lerichfinance.app';
-
-/** Cliente de demonstração: criado apenas quando DEMO_PASSWORD é informada. */
 const DEMO_PASSWORD = process.env.DEMO_PASSWORD;
 
-async function seed() {
-  const store = load();
+let seeding: Promise<void> | null = null;
 
-  const semAdmin = !store.users.some((user) => user.role === 'ADMIN');
+async function seed() {
+  const usuarios = await repo().listUsers();
+  const semAdmin = !usuarios.some((user) => user.role === 'ADMIN');
 
   if (semAdmin && ADMIN_USERNAME && ADMIN_PASSWORD) {
-    store.users.push({
-      id: randomId(8),
+    await repo().saveUser({
+      id: 'seed-admin',
       username: ADMIN_USERNAME,
       nome: ADMIN_NAME,
       email: ADMIN_EMAIL,
@@ -130,9 +101,9 @@ async function seed() {
     );
   }
 
-  if (store.users.length === 1 && DEMO_PASSWORD) {
-    store.users.push({
-      id: randomId(8),
+  if (!usuarios.length && DEMO_PASSWORD) {
+    await repo().saveUser({
+      id: 'seed-cliente-demo',
       username: 'cliente.demo',
       nome: 'Cliente Demonstração',
       email: 'cliente@lerichfinance.app',
@@ -144,14 +115,16 @@ async function seed() {
       password_hash: await hashPassword(DEMO_PASSWORD),
     });
   }
-
-  persist();
 }
 
-async function ready(): Promise<StoreShape> {
-  seeding ??= seed();
+async function ready(): Promise<StoreRepository> {
+  seeding ??= seed().catch((causa) => {
+    // Um seed que falha não pode derrubar todas as requisições seguintes.
+    console.error('[lerich-finance] Falha ao preparar o store:', causa);
+    seeding = null;
+  });
   await seeding;
-  return load();
+  return repo();
 }
 
 /* ---------- Leitura ---------- */
@@ -172,36 +145,33 @@ export function toPublicUser(user: StoredUser): AppUser {
 }
 
 export async function listUsers(): Promise<AppUser[]> {
-  const store = await ready();
-  return [...store.users].sort((a, b) => a.created_at.localeCompare(b.created_at)).map(toPublicUser);
+  const usuarios = await (await ready()).listUsers();
+  return usuarios.sort((a, b) => a.created_at.localeCompare(b.created_at)).map(toPublicUser);
 }
 
 export async function findUserById(id: string): Promise<StoredUser | undefined> {
-  const store = await ready();
-  return store.users.find((user) => user.id === id);
+  return (await ready()).getUser(id);
 }
 
 /** Busca por nome de usuário OU e-mail, ambos sem diferenciar maiúsculas. */
 export async function findUserByIdentifier(identifier: string): Promise<StoredUser | undefined> {
-  const store = await ready();
   const alvo = identifier.trim().toLowerCase();
   if (!alvo) return undefined;
 
-  return store.users.find(
-    (user) => user.username.toLowerCase() === alvo || user.email.toLowerCase() === alvo,
-  );
+  const store = await ready();
+  return (await store.findUserByUsername(alvo)) ?? (await store.findUserByEmail(alvo));
 }
 
 export async function getSettings(): Promise<AppSettings> {
-  const store = await ready();
-  return { ...store.settings };
+  return (await ready()).getSettings();
 }
 
 export async function updateSettings(patch: Partial<AppSettings>): Promise<AppSettings> {
   const store = await ready();
-  store.settings = { ...store.settings, ...patch };
-  persist();
-  return { ...store.settings };
+  const atual = await store.getSettings();
+  const novo = { ...atual, ...patch };
+  await store.saveSettings(novo);
+  return novo;
 }
 
 /* ---------- Autenticação ---------- */
@@ -210,8 +180,7 @@ export type AuthResult = { ok: true; user: AppUser } | { ok: false; reason: 'CRE
 
 export async function authenticate(username: string, password: string): Promise<AuthResult> {
   const store = await ready();
-  const normalized = username.trim().toLowerCase();
-  const user = store.users.find((candidate) => candidate.username.toLowerCase() === normalized);
+  const user = await store.findUserByUsername(username);
 
   // Compara mesmo sem usuário encontrado, mantendo o custo constante.
   const hash = user?.password_hash ?? (await hashPassword(randomId(12)));
@@ -220,8 +189,7 @@ export async function authenticate(username: string, password: string): Promise<
   if (!user || !valid) return { ok: false, reason: 'CREDENCIAIS' };
   if (user.status === 'SUSPENSO') return { ok: false, reason: 'SUSPENSO' };
 
-  user.last_login_at = new Date().toISOString();
-  persist();
+  await store.saveUser({ ...user, last_login_at: new Date().toISOString() });
   return { ok: true, user: toPublicUser(user) };
 }
 
@@ -240,7 +208,9 @@ export async function createUser(input: CreateUserInput): Promise<AppUser> {
   const store = await ready();
   const username = input.username.trim();
 
-  if (store.users.some((user) => user.username.toLowerCase() === username.toLowerCase())) {
+  // Verificação-e-gravação sem transação: em teoria dois cadastros simultâneos
+  // com o mesmo usuário poderiam passar. Aceitável no volume deste sistema.
+  if (await store.findUserByUsername(username)) {
     throw new Error('Este usuário já existe.');
   }
 
@@ -257,8 +227,7 @@ export async function createUser(input: CreateUserInput): Promise<AppUser> {
     password_hash: await hashPassword(input.password),
   };
 
-  store.users.push(user);
-  persist();
+  await store.saveUser(user);
   return toPublicUser(user);
 }
 
@@ -273,44 +242,46 @@ export interface UpdateUserInput {
 
 export async function updateUser(id: string, patch: UpdateUserInput): Promise<AppUser> {
   const store = await ready();
-  const user = store.users.find((candidate) => candidate.id === id);
+  const user = await store.getUser(id);
   if (!user) throw new Error('Usuário não encontrado.');
 
-  const wouldDropAdmin =
+  const perderiaAdmin =
     user.role === 'ADMIN' &&
     ((patch.role !== undefined && patch.role !== 'ADMIN') || patch.status === 'SUSPENSO');
 
-  if (wouldDropAdmin) {
-    const activeAdmins = store.users.filter(
-      (candidate) => candidate.role === 'ADMIN' && candidate.status === 'ATIVO',
-    );
-    if (activeAdmins.length <= 1) throw new Error('É necessário manter ao menos um administrador ativo.');
+  if (perderiaAdmin) {
+    const usuarios = await store.listUsers();
+    const adminsAtivos = usuarios.filter((item) => item.role === 'ADMIN' && item.status === 'ATIVO');
+    if (adminsAtivos.length <= 1) throw new Error('É necessário manter ao menos um administrador ativo.');
   }
 
-  if (patch.nome !== undefined) user.nome = patch.nome.trim();
-  if (patch.email !== undefined) user.email = patch.email.trim().toLowerCase();
-  if (patch.role !== undefined) user.role = patch.role;
-  if (patch.status !== undefined) user.status = patch.status;
-  if (patch.plano !== undefined) user.plano = patch.plano;
-  if (patch.password) user.password_hash = await hashPassword(patch.password);
+  const atualizado: StoredUser = {
+    ...user,
+    nome: patch.nome !== undefined ? patch.nome.trim() : user.nome,
+    email: patch.email !== undefined ? patch.email.trim().toLowerCase() : user.email,
+    role: patch.role ?? user.role,
+    status: patch.status ?? user.status,
+    plano: patch.plano ?? user.plano,
+    password_hash: patch.password ? await hashPassword(patch.password) : user.password_hash,
+  };
 
-  persist();
-  return toPublicUser(user);
+  await store.saveUser(atualizado);
+  return toPublicUser(atualizado);
 }
 
 export async function deleteUser(id: string): Promise<AppUser> {
   const store = await ready();
-  const target = store.users.find((candidate) => candidate.id === id);
-  if (!target) throw new Error('Usuário não encontrado.');
+  const alvo = await store.getUser(id);
+  if (!alvo) throw new Error('Usuário não encontrado.');
 
-  if (target.role === 'ADMIN') {
-    const admins = store.users.filter((candidate) => candidate.role === 'ADMIN');
+  if (alvo.role === 'ADMIN') {
+    const usuarios = await store.listUsers();
+    const admins = usuarios.filter((item) => item.role === 'ADMIN');
     if (admins.length <= 1) throw new Error('É necessário manter ao menos um administrador.');
   }
 
-  store.users = store.users.filter((candidate) => candidate.id !== id);
-  persist();
-  return toPublicUser(target);
+  await store.removeUser(id);
+  return toPublicUser(alvo);
 }
 
 /* ---------- Recuperação de senha ---------- */
@@ -326,24 +297,26 @@ export async function createPasswordReset(userId: string): Promise<string> {
   const store = await ready();
   const agora = Date.now();
 
-  for (const reset of store.resets) {
-    if (reset.user_id === userId && !reset.used_at) reset.used_at = new Date(agora).toISOString();
+  for (const anterior of await store.listResetsByUser(userId)) {
+    if (!anterior.used_at) {
+      await store.saveReset({ ...anterior, used_at: new Date(agora).toISOString() });
+    }
   }
 
   const token = `${randomId(24)}${randomId(8)}`;
-  store.resets.push({
+  const reset: PasswordReset = {
     id: randomId(8),
     user_id: userId,
     token_hash: await hashToken(token),
     created_at: new Date(agora).toISOString(),
     expires_at: new Date(agora + RESET_TTL_MS).toISOString(),
     used_at: null,
-  });
+  };
 
-  // Descarta pedidos velhos para o arquivo não crescer sem limite.
-  store.resets = store.resets.filter((reset) => Date.parse(reset.expires_at) > agora - RESET_TTL_MS);
+  await store.saveReset(reset);
+  // Descarta pedidos vencidos há mais de uma hora, para não acumular lixo.
+  await store.purgeResetsBefore(agora - RESET_TTL_MS);
 
-  persist();
   return token;
 }
 
@@ -354,14 +327,13 @@ export type ResetCheck =
 /** Valida o token sem consumi-lo — usado para decidir se a tela abre. */
 export async function checkPasswordReset(token: string): Promise<ResetCheck> {
   const store = await ready();
-  const hash = await hashToken(token);
-  const reset = store.resets.find((item) => item.token_hash === hash);
+  const reset = await store.findResetByHash(await hashToken(token));
 
   if (!reset) return { ok: false, reason: 'INVALIDO' };
   if (reset.used_at) return { ok: false, reason: 'USADO' };
   if (Date.parse(reset.expires_at) < Date.now()) return { ok: false, reason: 'EXPIRADO' };
 
-  const user = store.users.find((item) => item.id === reset.user_id);
+  const user = await store.getUser(reset.user_id);
   if (!user) return { ok: false, reason: 'INVALIDO' };
 
   return { ok: true, user };
@@ -377,13 +349,16 @@ export async function consumePasswordReset(
   if (!verificacao.ok) return verificacao;
 
   const hash = await hashToken(token);
-  const reset = store.resets.find((item) => item.token_hash === hash);
-  if (reset) reset.used_at = new Date().toISOString();
+  const reset = await store.findResetByHash(hash);
+  if (reset) await store.saveReset({ ...reset, used_at: new Date().toISOString() });
 
-  verificacao.user.password_hash = await hashPassword(novaSenha);
-  persist();
+  const atualizado: StoredUser = {
+    ...verificacao.user,
+    password_hash: await hashPassword(novaSenha),
+  };
+  await store.saveUser(atualizado);
 
-  return { ok: true, user: toPublicUser(verificacao.user) };
+  return { ok: true, user: toPublicUser(atualizado) };
 }
 
 /* ---------- Auditoria ---------- */
@@ -395,23 +370,18 @@ export async function recordAudit(entry: {
   detalhe: string;
 }): Promise<void> {
   const store = await ready();
-  store.audit.unshift({
+  const log: AuditLog = {
     id: randomId(8),
     action: entry.action,
     actor: entry.actor,
     target: entry.target ?? null,
     detalhe: entry.detalhe,
     created_at: new Date().toISOString(),
-  });
-  store.audit = store.audit.slice(0, 500);
-  persist();
+  };
+
+  await store.appendAudit(log);
 }
 
 export async function listAudit(limit = 100): Promise<AuditLog[]> {
-  const store = await ready();
-  return store.audit.slice(0, limit);
-}
-
-export function isPersistenceAvailable(): boolean {
-  return persistenceAvailable;
+  return (await ready()).listAudit(limit);
 }

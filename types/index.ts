@@ -138,3 +138,6 @@ export interface PasswordReset {
   expires_at: string;
   used_at: string | null;
 }
+
+/** Onde o store está guardando os dados nesta instância. */
+export type StoreDriver = 'firestore' | 'arquivo' | 'memoria';

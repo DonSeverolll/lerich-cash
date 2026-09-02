@@ -4,15 +4,28 @@ import { useState } from 'react';
 import { Database, LoaderCircle, Save, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { AppSettings } from '@/types';
+import type { AppSettings, StoreDriver } from '@/types';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 
-export function AdminSettingsView({ initialSettings }: { initialSettings: AppSettings }) {
+const rotuloDriver: Record<StoreDriver, string> = {
+  firestore: 'Cloud Firestore',
+  arquivo: 'Arquivo local',
+  memoria: 'Somente memória',
+};
+
+export function AdminSettingsView({
+  initialSettings,
+  driver,
+}: {
+  initialSettings: AppSettings;
+  driver: StoreDriver;
+}) {
   const [settings, setSettings] = useState(initialSettings);
   const [pending, setPending] = useState(false);
 
@@ -148,14 +161,24 @@ export function AdminSettingsView({ initialSettings }: { initialSettings: AppSet
         <Card>
           <CardHeader>
             <CardTitle>Persistência</CardTitle>
-            <CardDescription>Onde os dados de acesso ficam guardados</CardDescription>
+            <CardDescription>Onde os dados de acesso estão guardados agora</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 pt-0 text-sm text-onyx-300">
-            <Item icon={<Database className="h-4 w-4" />} title="Arquivo local .data/store.json">
-              Usuários, auditoria e configurações. Ideal para desenvolvimento e instância única.
+            <div className="flex items-center justify-between rounded-xl border border-gold-500/20 bg-gold-500/5 px-3.5 py-3">
+              <span className="flex items-center gap-2 text-onyx-200">
+                <Database className="h-4 w-4 text-gold-400" />
+                Driver em uso
+              </span>
+              <Badge tone={driver === 'firestore' ? 'success' : 'warning'}>{rotuloDriver[driver]}</Badge>
+            </div>
+
+            <Item icon={<Database className="h-4 w-4" />} title="Cloud Firestore">
+              Recomendado em produção. Definindo as variáveis do Firebase, o sistema passa a usá-lo
+              automaticamente e os cadastros sobrevivem a novos deploys.
             </Item>
-            <Item icon={<Database className="h-4 w-4" />} title="Supabase (opcional)">
-              Preencha NEXT_PUBLIC_SUPABASE_URL e a chave anônima para migrar os dados financeiros.
+            <Item icon={<Database className="h-4 w-4" />} title="Arquivo local .data/store.json">
+              Alternativa sem configuração, para desenvolvimento e instância única. Não persiste em
+              hospedagem serverless.
             </Item>
           </CardContent>
         </Card>

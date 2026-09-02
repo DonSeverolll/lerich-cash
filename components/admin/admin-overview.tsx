@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { Activity, AlertTriangle, Crown, ShieldCheck, UserCheck, Users } from 'lucide-react';
+import { Activity, AlertTriangle, Crown, Database, ShieldCheck, UserCheck, Users } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
-import type { AppUser, AuditLog } from '@/types';
+import type { AppUser, AuditLog, StoreDriver } from '@/types';
 
 import { mockAccounts, mockSubscriptions, mockTransactions } from '@/lib/mock-data';
 import { currencyBRL } from '@/lib/utils';
@@ -39,10 +39,28 @@ const auditLabels: Record<AuditLog['action'], string> = {
 interface AdminOverviewProps {
   users: AppUser[];
   audit: AuditLog[];
-  persistente: boolean;
+  driver: StoreDriver;
 }
 
-export function AdminOverview({ users, audit, persistente }: AdminOverviewProps) {
+const avisoDriver: Record<StoreDriver, { texto: string; alerta: boolean }> = {
+  firestore: {
+    texto: 'Dados de acesso no Cloud Firestore — usuários criados aqui persistem entre deploys.',
+    alerta: false,
+  },
+  arquivo: {
+    texto:
+      'Dados de acesso em arquivo local (.data/store.json). Funciona em uma única instância; em hospedagem serverless os cadastros somem no próximo deploy. Configure o Firebase para persistência real.',
+    alerta: true,
+  },
+  memoria: {
+    texto:
+      'O armazenamento em arquivo não está disponível neste ambiente: os usuários criados agora vivem apenas em memória e serão perdidos ao reiniciar. Configure o Firebase para persistência real.',
+    alerta: true,
+  },
+};
+
+export function AdminOverview({ users, audit, driver }: AdminOverviewProps) {
+  const aviso = avisoDriver[driver];
   const clientes = users.filter((user) => user.role === 'CLIENTE');
   const ativos = users.filter((user) => user.status === 'ATIVO');
   const admins = users.filter((user) => user.role === 'ADMIN');
@@ -62,15 +80,20 @@ export function AdminOverview({ users, audit, persistente }: AdminOverviewProps)
 
   return (
     <div className="space-y-6">
-      {!persistente ? (
-        <div className="flex items-start gap-3 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-100">
+      <div
+        className={
+          aviso.alerta
+            ? 'flex items-start gap-3 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-100'
+            : 'flex items-start gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-100'
+        }
+      >
+        {aviso.alerta ? (
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-          <p>
-            O armazenamento em arquivo não está disponível neste ambiente: os usuários criados agora vivem
-            apenas em memória e serão perdidos ao reiniciar. Configure o Supabase para persistência real.
-          </p>
-        </div>
-      ) : null}
+        ) : (
+          <Database className="mt-0.5 h-4 w-4 shrink-0" />
+        )}
+        <p>{aviso.texto}</p>
+      </div>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Usuários" value={String(users.length)} hint={`${admins.length} administrador(es)`} icon={<Users className="h-5 w-5" />} />

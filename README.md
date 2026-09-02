@@ -140,11 +140,16 @@ components/
   ui/                    Primitivos (button, card, input, select, dialog, badge…)
 lib/
   auth/                  Criptografia, token de sessão e helpers de servidor
-  server/                Store, envio de e-mail e rate limit
+  server/
+    store/               Store: regras de negócio + drivers (Firestore, arquivo)
+    mailer.ts            Envio de e-mail transacional
+    rate-limit.ts        Limite de tentativas
   mock-data.ts           Dados de demonstração gerados a partir do mês atual
   ofx-parser.ts          Leitura de OFX e CSV
 proxy.ts                 Proteção de rotas (antigo middleware.ts do Next 15)
-supabase/schema.sql      Esquema Postgres: finanças, perfis, auditoria e RLS
+firebase/                Regras do Firestore e notas de configuração
+scripts/                 Diagnóstico do Firebase (npm run firebase:check)
+supabase/schema.sql      Esquema Postgres, caso um dia volte para SQL
 ```
 
 ## Marca
@@ -161,30 +166,104 @@ Os três são consumidos por `components/brand/logo.tsx` (`BrandLockup`, `BrandM
 
 ## Persistência
 
-Por padrão os dados de acesso ficam em `.data/store.json` (ignorado pelo Git). O arquivo é revalidado por `mtime`, então rotas diferentes sempre leem a versão mais recente. Em ambientes com sistema de arquivos somente leitura a aplicação degrada para memória e o painel administrativo avisa na visão geral.
+O store escolhe onde gravar sozinho, a partir do ambiente:
+
+| Driver | Quando é usado | Persiste na Vercel? |
+| --- | --- | --- |
+| **Cloud Firestore** | Quando as variáveis do Firebase estão preenchidas | Sim |
+| **Arquivo** (`.data/store.json`) | Padrão, sem configuração | Não |
+| **Memória** | Quando nem o arquivo pode ser gravado | Não |
+
+O painel administrativo mostra o driver ativo na visão geral e em Configurações, com aviso quando não há persistência real. O código fica em `lib/server/store/`: `index.ts` tem as regras de negócio e cada driver implementa a interface de `repository.ts` — trocar de banco não mexe em nada acima do store.
+
+## Firebase — passo a passo
+
+Nunca usou o Firebase? Este roteiro cobre do zero até o site no ar.
+
+### 1. Criar o projeto
+
+1. Abra [console.firebase.google.com](https://console.firebase.google.com) e clique em **Criar um projeto**.
+2. Dê um nome (ex.: `lerich-finance`). O Google Analytics é opcional — pode desativar.
+
+### 2. Criar o banco Firestore
+
+1. No menu lateral: **Criar** → **Firestore Database** → **Criar banco de dados**.
+2. Escolha **Modo de produção** (o acesso é só pelo servidor; regras abertas seriam um vazamento).
+3. Escolha a região — `southamerica-east1` (São Paulo) tem a menor latência para o Brasil. **A região não pode ser alterada depois.**
+
+### 3. Gerar a credencial de servidor
+
+1. Engrenagem ⚙ ao lado de *Visão geral do projeto* → **Configurações do projeto**.
+2. Aba **Contas de serviço** → **Gerar nova chave privada** → confirme.
+3. Um arquivo `.json` é baixado. Ele é **um segredo**: dá acesso total ao banco. Não coloque no Git, não mande por e-mail nem cole em chat.
+
+### 4. Configurar o projeto local
+
+Copie três campos do JSON para o `.env.local`:
+
+```bash
+cp .env.example .env.local
+```
+
+| Campo do JSON | Variável |
+| --- | --- |
+| `project_id` | `FIREBASE_PROJECT_ID` |
+| `client_email` | `FIREBASE_CLIENT_EMAIL` |
+| `private_key` | `FIREBASE_PRIVATE_KEY` |
+
+A chave privada vai **entre aspas e em uma linha só**, mantendo os `\n` como estão no arquivo:
+
+```
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nMIIEvQ...\n-----END PRIVATE KEY-----\n"
+```
+
+Se o painel onde você vai colar não aceitar bem quebras de linha, use a alternativa: jogue o **JSON inteiro** em `FIREBASE_SERVICE_ACCOUNT` (texto puro ou base64).
+
+### 5. Conferir a conexão
+
+```bash
+npm run firebase:check
+```
+
+O script grava, lê e apaga um documento de teste, e explica o que fazer em cada erro comum (banco ainda não criado, credencial de outro projeto, permissão insuficiente). Passando aqui, `npm run dev` já sobe usando o Firestore — a visão geral do admin mostra **Cloud Firestore** no lugar do aviso amarelo.
+
+### 6. Publicar as regras de segurança
+
+O aplicativo acessa o Firestore **somente pelo servidor**, com o Admin SDK — que ignora as regras. Por isso as regras publicadas devem negar tudo do lado do cliente, senão hashes de senha e a auditoria ficam expostos a qualquer visitante.
+
+Cole o conteúdo de `firebase/firestore.rules` em **Firestore Database → Regras** e publique.
+
+### Coleções criadas
+
+`usuarios`, `auditoria`, `configuracoes` e `recuperacoes` — criadas sozinhas no primeiro uso. Nenhum índice composto é necessário.
+
+### Custo
+
+O plano gratuito (Spark) cobre com folga o uso deste sistema: as leituras acontecem por requisição autenticada, não por visita. Se um dia migrar para o plano Blaze, vale configurar um alerta de orçamento.
 
 ## Deploy na Vercel
 
-> ⚠️ **Leia antes de publicar.** O store em arquivo **não persiste na Vercel**: o sistema de arquivos é efêmero e cada instância serverless é isolada. Na prática, usuários criados pelo painel somem no próximo deploy ou na próxima instância fria, e o administrador é re-semeado a partir das variáveis de ambiente a cada boot. O painel avisa isso na visão geral.
->
-> Para uma operação real, migre o store para o Supabase antes (veja abaixo). Enquanto isso não acontece, o deploy funciona para demonstração — login, papéis e todas as telas — mas **não** como cadastro definitivo de usuários.
-
-1. Importe o repositório na Vercel (framework Next.js detectado automaticamente).
+1. Importe o repositório na Vercel (o framework Next.js é detectado automaticamente).
 2. Em *Settings → Environment Variables*, defina para **Production** e **Preview**:
-   - `AUTH_SECRET` — chave de 32+ caracteres, diferente da usada em desenvolvimento
-   - `ADMIN_USERNAME` e `ADMIN_PASSWORD`
-   - `ADMIN_NAME`, `ADMIN_EMAIL` (opcionais)
-   - `RESEND_API_KEY`, `MAIL_FROM` e `APP_URL` para o e-mail de recuperação sair de verdade
-   - `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY` quando for usar o Supabase
-   - deixe `DEMO_PASSWORD` **em branco** em produção
-3. Faça o deploy e troque a senha do administrador pelo painel no primeiro acesso.
 
-### Migrando o store para o Supabase
+| Variável | Observação |
+| --- | --- |
+| `AUTH_SECRET` | 32+ caracteres, diferente da usada em desenvolvimento |
+| `ADMIN_USERNAME`, `ADMIN_PASSWORD` | Administrador inicial |
+| `ADMIN_NAME`, `ADMIN_EMAIL` | Opcionais |
+| `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` | Persistência — **sem estas, os cadastros não sobrevivem ao próximo deploy** |
+| `RESEND_API_KEY`, `MAIL_FROM`, `APP_URL` | Para o e-mail de recuperação sair de verdade |
+| `DEMO_PASSWORD` | Deixe **em branco** em produção |
 
-Preencher as chaves do Supabase **não é suficiente por si só**: hoje `lib/server/store.ts` grava em arquivo e é ele quem precisa passar a falar com o banco. O caminho:
+Gere o segredo com:
 
-1. Aplique `supabase/schema.sql` no projeto Supabase — ele já cria `perfis`, `auditoria`, `configuracoes`, as policies de RLS e a função `public.is_admin()`.
-2. Reescreva as funções exportadas de `lib/server/store.ts` (`listUsers`, `createUser`, `updateUser`, `deleteUser`, `authenticate`, `recordAudit`, `listAudit`, `getSettings`, `updateSettings`) usando o cliente do Supabase. A assinatura de cada uma já é assíncrona, então nada acima delas muda.
-3. Use a *service role key* (variável **sem** o prefixo `NEXT_PUBLIC_`) apenas no servidor, para as operações administrativas.
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
+```
 
-Os dados financeiros exibidos hoje são de demonstração (`lib/mock-data.ts`), gerados a partir do mês corrente para que o painel nunca apareça vazio.
+3. Faça o deploy, entre no painel e **troque a senha do administrador** no primeiro acesso. A partir daí o hash gravado é a fonte da verdade e `ADMIN_PASSWORD` deixa de ser usada.
+4. Confirme na visão geral do admin que o driver é **Cloud Firestore**.
+
+Ao colar a chave privada na Vercel, mantenha as aspas e os `\n` — o campo aceita o valor em uma linha só.
+
+Os dados financeiros exibidos hoje são de demonstração (`lib/mock-data.ts`), gerados a partir do mês corrente para que o painel nunca apareça vazio. Migrá-los para o Firestore é o próximo passo natural, seguindo o mesmo padrão de driver já usado no store.
