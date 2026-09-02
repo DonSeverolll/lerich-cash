@@ -6,9 +6,16 @@ import { createSessionToken, sessionCookieOptions } from '@/lib/auth/server';
 import { checkRateLimit, registerFailure, resetRateLimit } from '@/lib/server/rate-limit';
 
 const schema = z.object({
-  username: z.string().min(1, 'Informe o usuário.').max(120),
-  password: z.string().min(1, 'Informe a senha.').max(200),
-  next: z.string().optional(),
+  username: z
+    .string({ required_error: 'Informe o usuário.', invalid_type_error: 'Informe o usuário.' })
+    .min(1, 'Informe o usuário.')
+    .max(120),
+  password: z
+    .string({ required_error: 'Informe a senha.', invalid_type_error: 'Informe a senha.' })
+    .min(1, 'Informe a senha.')
+    .max(200),
+  // O formulário manda `null` quando não há `?next=` na URL.
+  next: z.string().nullish(),
 });
 
 function clientKey(request: NextRequest) {
