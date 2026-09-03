@@ -16,13 +16,25 @@ interface ContextoTema {
 const Contexto = createContext<ContextoTema | null>(null);
 
 /**
- * Duração da cortina; a paleta troca na metade, quando a tela está coberta.
- * Sob "reduzir movimento" a cortina não varre — dá um clarão curto —, então o
- * ciclo é bem mais rápido. A troca de tema é uma ação pedida pelo usuário, não
- * um movimento ambiente, por isso ela continua tendo um retorno visual.
+ * A duração da cortina é lida da própria CSS depois que o elemento entra no
+ * documento. Antes havia duas constantes aqui repetindo os valores da folha de
+ * estilo, e sob "reduzir movimento" elas saíam de sincronia: a paleta trocava
+ * enquanto a cortina já estava transparente, e dava para ver a interface
+ * inteira mudar de cor. Com a leitura direta existe uma fonte da verdade só, e
+ * a regra vale para qualquer variante — inclusive as de media query.
+ *
+ * A troca de tema é uma ação pedida pelo usuário, não um movimento ambiente,
+ * por isso ela continua tendo retorno visual mesmo com movimento reduzido.
  */
-const DURACAO_MS = 1170;
-const DURACAO_REDUZIDA_MS = 390;
+const DURACAO_DE_SEGURANCA_MS = 1170;
+
+/** Lê `animation-duration` (ex.: "1.17s", "390ms") em milissegundos. */
+function duracaoDaAnimacao(elemento: HTMLElement): number {
+  const bruto = window.getComputedStyle(elemento).animationDuration.split(',')[0]?.trim() ?? '';
+  const numero = Number.parseFloat(bruto);
+  if (!Number.isFinite(numero) || numero <= 0) return 0;
+  return bruto.endsWith('ms') ? numero : numero * 1000;
+}
 
 /*
   O atributo `data-tema` do <html> é a fonte da verdade: o script inline do
@@ -68,9 +80,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       // Navegação privada ou armazenamento bloqueado: a escolha vale só nesta visita.
     }
 
-    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const duracao = reduzido ? DURACAO_REDUZIDA_MS : DURACAO_MS;
-
     // A cortina é um elemento solto: entra pela direita, cobre e sai pela esquerda.
     const cortina = document.createElement('div');
     cortina.className = 'cortina-tema';
@@ -78,8 +87,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     cortina.setAttribute('aria-hidden', 'true');
     document.body.appendChild(cortina);
 
+    const duracao = duracaoDaAnimacao(cortina) || DURACAO_DE_SEGURANCA_MS;
+
+    // Sem animação (extensão, impressão, `animation: none`) não há o que
+    // esperar: troca na hora, senão o usuário ficaria olhando uma tela coberta.
+    if (!duracaoDaAnimacao(cortina)) {
+      cortina.remove();
+      aplicar(proximo);
+      return;
+    }
+
     setTrocando(true);
     timers.current.push(
+      // A paleta troca no meio do ciclo, quando a cortina está cobrindo.
       window.setTimeout(() => aplicar(proximo), duracao / 2),
       window.setTimeout(() => {
         cortina.remove();

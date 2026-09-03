@@ -358,7 +358,7 @@ body::before {
   inset: 0;
   z-index: 100;
   pointer-events: none;
-  will-change: transform;
+  will-change: transform, opacity;
   animation: cortina-tema 1170ms cubic-bezier(0.65, 0, 0.35, 1) forwards;
 }
 
@@ -516,9 +516,22 @@ body::before {
     animation: cintilar-olho-suave 5s ease-in-out infinite;
   }
 
-  /* A cortina vira um clarão curto, sem varredura. */
+  /*
+    A cortina não varre: vira um cobrir-e-revelar curto. Precisa ser uma cor
+    chapada — o gradiente diagonal parado em cima da tela inteira lê como
+    defeito, não como transição — e precisa estar 100% opaca no instante em
+    que a paleta troca, senão a interface muda de cor à vista.
+  */
   .cortina-tema {
-    animation: cortina-tema-suave 390ms ease-out forwards;
+    animation: cortina-tema-suave 390ms ease-in-out forwards;
+  }
+
+  .cortina-tema[data-para='claro'] {
+    background: #f4f6f8;
+  }
+
+  .cortina-tema[data-para='escuro'] {
+    background: #050505;
   }
 }
 
@@ -537,10 +550,14 @@ body::before {
 }
 
 @keyframes cortina-tema-suave {
-  from {
-    opacity: 0.85;
+  0% {
+    opacity: 0;
   }
-  to {
+  42%,
+  58% {
+    opacity: 1;
+  }
+  100% {
     opacity: 0;
   }
 }
