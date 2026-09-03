@@ -517,21 +517,16 @@ body::before {
   }
 
   /*
-    A cortina não varre: vira um cobrir-e-revelar curto. Precisa ser uma cor
-    chapada — o gradiente diagonal parado em cima da tela inteira lê como
-    defeito, não como transição — e precisa estar 100% opaca no instante em
-    que a paleta troca, senão a interface muda de cor à vista.
+    A cortina continua varrendo mesmo aqui, só que mais rápida.
+    Trocar de tema é uma ação que o usuário pediu, com início e fim claros —
+    não é movimento ambiente como o feixe do fundo. Suprimir a varredura
+    deixava só um clarão de tela cheia, que lê como defeito e ainda por cima
+    esconde o que está acontecendo. O que a preferência ganha aqui é um ciclo
+    mais curto; quem quiser suprimir de vez troca esta regra por
+    `animation: cortina-tema-suave 390ms ease-in-out forwards`.
   */
   .cortina-tema {
-    animation: cortina-tema-suave 390ms ease-in-out forwards;
-  }
-
-  .cortina-tema[data-para='claro'] {
-    background: #f4f6f8;
-  }
-
-  .cortina-tema[data-para='escuro'] {
-    background: #050505;
+    animation-duration: 720ms;
   }
 }
 
@@ -549,6 +544,12 @@ body::before {
   }
 }
 
+/*
+  Alternativa sem varredura, caso se opte por suprimir o movimento: cobre e
+  revela em cor chapada, opaca no meio do caminho — que é quando a paleta
+  troca. Fica opaca de propósito: se a troca acontecer com a cortina
+  transparente, dá para ver a interface inteira mudar de cor.
+*/
 @keyframes cortina-tema-suave {
   0% {
     opacity: 0;
