@@ -234,6 +234,7 @@ export function ImportView({ contas, categorias }: { contas: Account[]; categori
 
                     <Select
                       aria-label="Conta de destino"
+                      data-dica="Conta de destino"
                       className="w-40"
                       value={item.conta_id ?? ''}
                       onChange={(event) => atualizar(item.id, { conta_id: event.target.value || undefined })}
@@ -248,6 +249,7 @@ export function ImportView({ contas, categorias }: { contas: Account[]; categori
 
                     <Select
                       aria-label="Categoria"
+                      data-dica="Categoria"
                       className="w-44"
                       value={item.categoria_id ?? ''}
                       onChange={(event) => atualizar(item.id, { categoria_id: event.target.value || undefined })}
@@ -265,6 +267,7 @@ export function ImportView({ contas, categorias }: { contas: Account[]; categori
                     <button
                       type="button"
                       aria-label={aprovado ? 'Remover da seleção' : 'Incluir na seleção'}
+                      data-dica={aprovado ? 'Remover da seleção' : 'Incluir na seleção'}
                       onClick={() => alternarAprovacao(item.id)}
                       className={`rounded-xl border p-2 transition ${
                         aprovado
@@ -278,6 +281,7 @@ export function ImportView({ contas, categorias }: { contas: Account[]; categori
                     <button
                       type="button"
                       aria-label="Descartar lançamento"
+                      data-dica="Descartar lançamento"
                       onClick={() => descartar(item.id)}
                       className="rounded-xl border border-rose-500/25 p-2 text-rose-300 transition hover:bg-rose-500/15"
                     >

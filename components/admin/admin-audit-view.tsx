@@ -85,10 +85,12 @@ export function AdminAuditView({ logs }: { logs: AuditLog[] }) {
                 placeholder="Buscar por autor ou detalhe"
                 className="pl-9"
                 aria-label="Buscar eventos"
+                data-dica="Buscar eventos"
               />
             </div>
             <Select
               aria-label="Filtrar por ação"
+              data-dica="Filtrar por ação"
               className="md:w-56"
               value={acao}
               onChange={(event) => setAcao(event.target.value as 'TODAS' | AuditAction)}

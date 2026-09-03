@@ -149,6 +149,7 @@ export function AccountsView({ dados }: { dados: DadosFinanceiros }) {
                       <button
                         type="button"
                         aria-label={`Editar ${conta.nome}`}
+                        data-dica={`Editar ${conta.nome}`}
                         onClick={() => setEditando(conta)}
                         className="rounded-lg border border-gold-500/20 p-2 text-onyx-300 transition hover:border-gold-500/50 hover:text-gold-200"
                       >
@@ -157,6 +158,7 @@ export function AccountsView({ dados }: { dados: DadosFinanceiros }) {
                       <button
                         type="button"
                         aria-label={`Remover ${conta.nome}`}
+                        data-dica={`Remover ${conta.nome}`}
                         onClick={() => setRemovendo(conta)}
                         className="rounded-lg border border-rose-500/25 p-2 text-rose-300 transition hover:bg-rose-500/15"
                       >
@@ -276,7 +278,7 @@ function SeletorDePrioridade({ valorInicial }: { valorInicial?: string }) {
               type="button"
               onClick={() => setCor(prioridade.cor)}
               aria-pressed={selecionada}
-              title={`${prioridade.nome} — ${prioridade.descricao}`}
+              data-dica={`${prioridade.nome} — ${prioridade.descricao}`}
               className={cn(
                 'flex h-11 flex-1 items-end justify-center rounded-xl border pb-1.5 text-[10px] font-semibold text-acento/70 transition',
                 selecionada

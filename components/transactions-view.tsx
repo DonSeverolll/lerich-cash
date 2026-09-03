@@ -8,6 +8,8 @@ import { toast } from 'sonner';
 import type { DadosFinanceiros, Transaction, TransactionStatus, TransactionType } from '@/types';
 
 import { chamarApi, deInputData, paraInputData } from '@/lib/api-client';
+import { corDeCategoria, paletaGrafico } from '@/lib/chart-theme';
+import { useTema } from '@/components/theme/theme-provider';
 import { currencyBRL, formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,6 +35,8 @@ const PAGINA = 12;
 
 export function TransactionsView({ dados }: { dados: DadosFinanceiros }) {
   const router = useRouter();
+  const { tema } = useTema();
+  const cores = paletaGrafico(tema);
   const [busca, setBusca] = useState('');
   const [tipo, setTipo] = useState<TipoFiltro>('TODOS');
   const [conta, setConta] = useState('TODAS');
@@ -191,16 +195,27 @@ export function TransactionsView({ dados }: { dados: DadosFinanceiros }) {
                 placeholder="Buscar transação, categoria ou conta"
                 className="pl-9"
                 aria-label="Buscar transações"
+                data-dica="Buscar transações"
               />
             </div>
 
-            <Select aria-label="Tipo" value={tipo} onChange={(e) => setTipo(e.target.value as TipoFiltro)}>
+            <Select
+              aria-label="Tipo"
+              data-dica="Tipo"
+              value={tipo}
+              onChange={(e) => setTipo(e.target.value as TipoFiltro)}
+            >
               <option value="TODOS">Todos os tipos</option>
               <option value="RECEITA">Receitas</option>
               <option value="DESPESA">Despesas</option>
             </Select>
 
-            <Select aria-label="Conta" value={conta} onChange={(e) => setConta(e.target.value)}>
+            <Select
+              aria-label="Conta"
+              data-dica="Conta"
+              value={conta}
+              onChange={(e) => setConta(e.target.value)}
+            >
               <option value="TODAS">Todas as contas</option>
               {dados.contas.map((item) => (
                 <option key={item.id} value={item.id}>
@@ -209,7 +224,12 @@ export function TransactionsView({ dados }: { dados: DadosFinanceiros }) {
               ))}
             </Select>
 
-            <Select aria-label="Status" value={status} onChange={(e) => setStatus(e.target.value as StatusFiltro)}>
+            <Select
+              aria-label="Status"
+              data-dica="Status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value as StatusFiltro)}
+            >
               <option value="TODOS">Todos os status</option>
               <option value="EFETIVADA">Efetivadas</option>
               <option value="PENDENTE">Pendentes</option>
@@ -257,7 +277,8 @@ export function TransactionsView({ dados }: { dados: DadosFinanceiros }) {
                 </thead>
                 <tbody>
                   {filtradas.slice(0, visiveis).map((tx) => {
-                    const categoria = dados.categorias.find((item) => item.id === tx.categoria_id);
+                    const indiceCategoria = dados.categorias.findIndex((item) => item.id === tx.categoria_id);
+                    const categoria = dados.categorias[indiceCategoria];
                     const contaDaLinha = dados.contas.find((item) => item.id === tx.conta_id);
                     const receita = tx.tipo === 'RECEITA';
 
@@ -268,7 +289,7 @@ export function TransactionsView({ dados }: { dados: DadosFinanceiros }) {
                           <span className="inline-flex items-center gap-2">
                             <span
                               className="h-2 w-2 rounded-full"
-                              style={{ backgroundColor: categoria?.cor_hex ?? '#d4af37' }}
+                              style={{ backgroundColor: corDeCategoria(Math.max(0, indiceCategoria), cores) }}
                             />
                             {categoria?.nome ?? '—'}
                           </span>
@@ -279,7 +300,7 @@ export function TransactionsView({ dados }: { dados: DadosFinanceiros }) {
                           <button
                             type="button"
                             onClick={() => alternarStatus(tx)}
-                            title="Alternar status"
+                            data-dica="Alternar status"
                             className="cursor-pointer"
                           >
                             <Badge tone={tx.status === 'EFETIVADA' ? 'success' : 'warning'}>{tx.status}</Badge>
@@ -295,6 +316,7 @@ export function TransactionsView({ dados }: { dados: DadosFinanceiros }) {
                           <div className="flex justify-end gap-2">
                             <button
                               aria-label="Editar transação"
+                              data-dica="Editar transação"
                               onClick={() => setEditando(tx)}
                               className="rounded-lg border border-gold-500/20 p-2 text-onyx-300 transition hover:border-gold-500/50 hover:text-gold-200"
                             >
@@ -302,6 +324,7 @@ export function TransactionsView({ dados }: { dados: DadosFinanceiros }) {
                             </button>
                             <button
                               aria-label="Excluir transação"
+                              data-dica="Excluir transação"
                               onClick={() => setRemovendo(tx)}
                               className="rounded-lg border border-rose-500/25 p-2 text-rose-300 transition hover:bg-rose-500/15"
                             >

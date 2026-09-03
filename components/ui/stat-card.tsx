@@ -42,7 +42,7 @@ export function StatCard({ title, value, hint, icon, tone = 'neutral', trend, tr
               {trend}
             </p>
           ) : null}
-          {hint ? <p className="mt-1 truncate text-xs text-onyx-500">{hint}</p> : null}
+          {hint ? <p className="mt-1 text-xs leading-snug text-onyx-500">{hint}</p> : null}
         </div>
         {icon ? (
           <span

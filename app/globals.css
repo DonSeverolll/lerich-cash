@@ -39,8 +39,8 @@
   --onyx-200: 209 209 209;
   --onyx-300: 176 176 176;
   --onyx-400: 136 136 136;
-  --onyx-500: 109 109 109;
-  --onyx-600: 93 93 93;
+  --onyx-500: 132 132 132;
+  --onyx-600: 112 112 112;
   --onyx-700: 79 79 79;
   --onyx-800: 26 24 20;
   --onyx-900: 18 16 12;
@@ -55,6 +55,14 @@
   /* Texto que fica sobre o acento cheio (botão primário, avatar) */
   --acento-texto: 5 5 5;
 
+  /*
+    Preenchimento do acento. Fica em variável própria porque a escala do
+    tema claro é espelhada: usar `from-gold-300 to-gold-600` deixaria o fim
+    do gradiente claro demais para o texto branco por cima dele.
+  */
+  --acento-de: 233 203 109;
+  --acento-para: 184 145 42;
+
   /* Aviso em prata clara — sobre o preto, prata escura desapareceria */
   --aviso-50: 238 241 245;
   --aviso-100: 221 226 232;
@@ -68,27 +76,27 @@
   --aviso-900: 43 50 59;
 
   /* Tons de estado: claros, para contrastar com o fundo preto */
-  --emerald-50: 236 253 245;
-  --emerald-100: 209 250 229;
-  --emerald-200: 167 243 208;
-  --emerald-300: 110 231 183;
-  --emerald-400: 52 211 153;
-  --emerald-500: 16 185 129;
-  --emerald-600: 5 150 105;
-  --emerald-700: 4 120 87;
-  --emerald-800: 6 95 70;
-  --emerald-900: 6 78 59;
+  --emerald-50: 214 245 231;
+  --emerald-100: 184 238 214;
+  --emerald-200: 134 226 183;
+  --emerald-300: 74 200 154;
+  --emerald-400: 34 176 129;
+  --emerald-500: 13 154 108;
+  --emerald-600: 4 126 88;
+  --emerald-700: 3 100 73;
+  --emerald-800: 5 79 59;
+  --emerald-900: 5 65 49;
 
-  --rose-50: 255 241 242;
-  --rose-100: 255 228 230;
-  --rose-200: 254 205 211;
-  --rose-300: 253 164 175;
-  --rose-400: 251 113 133;
-  --rose-500: 244 63 94;
-  --rose-600: 225 29 72;
-  --rose-700: 190 18 60;
-  --rose-800: 159 18 57;
-  --rose-900: 136 19 55;
+  --rose-50: 252 227 229;
+  --rose-100: 252 210 214;
+  --rose-200: 250 180 190;
+  --rose-300: 240 128 145;
+  --rose-400: 235 88 112;
+  --rose-500: 214 48 76;
+  --rose-600: 195 24 62;
+  --rose-700: 164 15 52;
+  --rose-800: 137 15 49;
+  --rose-900: 117 16 47;
 
 
   /* Superfície dos cartões e trilho da barra de rolagem */
@@ -126,9 +134,9 @@
   --onyx-100: 30 34 41;
   --onyx-200: 51 57 66;
   --onyx-300: 74 82 92;
-  --onyx-400: 98 107 118;
-  --onyx-500: 123 132 143;
-  --onyx-600: 152 161 171;
+  --onyx-400: 84 92 102;
+  --onyx-500: 101 109 120;
+  --onyx-600: 132 141 152;
   --onyx-700: 190 196 203;
   --onyx-800: 226 230 235;
   --onyx-900: 240 242 245;
@@ -141,6 +149,10 @@
   --sombra: 90 100 115;
 
   --acento-texto: 255 255 255;
+
+  /* Prata escura o bastante para o branco alcançar 4.5:1 nas duas pontas */
+  --acento-de: 82 91 102;
+  --acento-para: 55 62 71;
 
   /* Aviso em prata escura, como o acento do tema claro */
   --aviso-50: 43 50 59;
@@ -157,7 +169,7 @@
   /* No claro os tons de estado escurecem o suficiente para serem legíveis */
   --emerald-50: 6 95 70;
   --emerald-100: 6 95 70;
-  --emerald-200: 4 120 87;
+  --emerald-200: 4 108 78;
   --emerald-300: 4 120 87;
   --emerald-400: 5 150 105;
   --emerald-500: 16 185 129;
@@ -530,5 +542,127 @@ body::before {
   }
   to {
     opacity: 0;
+  }
+}
+
+/*
+  ============================================================================
+  Dica em pop-up
+  ----------------------------------------------------------------------------
+  Só CSS: qualquer elemento com `data-dica="texto"` mostra um balão ao passar o
+  mouse ou ao receber foco pelo teclado. Os botões só de ícone dependiam do
+  `title` do navegador, que demora a aparecer e não segue o tema.
+
+  O balão é `aria-hidden` por natureza (vem de `content`), então o rótulo
+  acessível continua sendo o `aria-label` do próprio botão — leitores de tela
+  não leem o texto duas vezes.
+  ============================================================================
+*/
+[data-dica] {
+  position: relative;
+}
+
+[data-dica]::after,
+[data-dica]::before {
+  position: absolute;
+  left: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 140ms ease,
+    translate 140ms ease;
+}
+
+[data-dica]::after {
+  content: attr(data-dica);
+  bottom: calc(100% + 8px);
+  translate: -50% 4px;
+  z-index: 60;
+  width: max-content;
+  max-width: 15rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgb(var(--gold-500) / 0.3);
+  background: rgb(var(--campo));
+  box-shadow: 0 10px 24px -12px rgb(var(--sombra) / 0.7);
+  color: rgb(var(--onyx-100));
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.3;
+  white-space: pre-line;
+  text-align: center;
+}
+
+/* Setinha apontando para o elemento */
+[data-dica]::before {
+  content: '';
+  bottom: calc(100% + 3px);
+  translate: -50% 4px;
+  z-index: 61;
+  border: 5px solid transparent;
+  border-top-color: rgb(var(--gold-500) / 0.3);
+}
+
+[data-dica]:hover::after,
+[data-dica]:hover::before,
+[data-dica]:focus-visible::after,
+[data-dica]:focus-visible::before {
+  opacity: 1;
+  translate: -50% 0;
+}
+
+/* Perto da borda esquerda o balão sairia da tela; ancora à esquerda. */
+/*
+  Variantes de ancoragem. A dica é centralizada por padrão; perto das bordas
+  isso a jogaria para fora da tela, então quem fica no canto direito ou colado
+  no topo recebe `data-dica-lado`.
+*/
+[data-dica][data-dica-lado='esquerda']::after {
+  left: auto;
+  right: 0;
+  translate: 0 4px;
+}
+
+[data-dica][data-dica-lado='esquerda']:hover::after,
+[data-dica][data-dica-lado='esquerda']:focus-visible::after {
+  translate: 0;
+}
+
+[data-dica][data-dica-lado='baixo']::after {
+  bottom: auto;
+  top: calc(100% + 8px);
+  translate: -50% -4px;
+}
+
+[data-dica][data-dica-lado='baixo']::before {
+  bottom: auto;
+  top: calc(100% + 3px);
+  border-top-color: transparent;
+  border-bottom-color: rgb(var(--gold-500) / 0.3);
+  translate: -50% -4px;
+}
+
+[data-dica][data-dica-lado='baixo']:hover::after,
+[data-dica][data-dica-lado='baixo']:focus-visible::after,
+[data-dica][data-dica-lado='baixo']:hover::before,
+[data-dica][data-dica-lado='baixo']:focus-visible::before {
+  translate: -50%;
+}
+
+[data-dica][data-dica-lado='direita']::after {
+  left: 0;
+  translate: 0 4px;
+}
+
+[data-dica][data-dica-lado='direita']:hover::after,
+[data-dica][data-dica-lado='direita']:focus-visible::after {
+  translate: 0 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-dica]::after,
+  [data-dica]::before {
+    transition: opacity 100ms ease;
+    translate: -50% 0;
   }
 }

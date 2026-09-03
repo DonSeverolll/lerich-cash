@@ -10,7 +10,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-gradient-to-b from-gold-300 to-gold-600 text-acento shadow-gold hover:from-gold-200 hover:to-gold-500',
+          'bg-gradient-to-b from-acento-de to-acento-para text-acento shadow-gold hover:from-acento-de/85 hover:to-acento-para/85',
         outline: 'border border-gold-500/30 bg-onyx-950/40 text-gold-100 hover:border-gold-500/60 hover:bg-gold-500/10',
         ghost: 'text-onyx-200 hover:bg-onyx-50/5 hover:text-gold-100',
         subtle: 'border border-onyx-50/10 bg-onyx-50/5 text-onyx-100 hover:bg-onyx-50/10',

@@ -10,6 +10,11 @@ const schema = z.object({
   nome_servico: z.string().min(1, 'Informe o nome do serviço.').max(80),
   valor: z.number().positive('O valor precisa ser maior que zero.'),
   dia_vencimento: z.number().int().min(1).max(31),
+  // `AAAA-MM`; null limpa o prazo e deixa o plano sem data de fim.
+  vigente_ate: z
+    .string()
+    .regex(/^\d{4}-\d{2}$/, 'Informe o mês no formato AAAA-MM.')
+    .nullish(),
 });
 
 export async function POST(request: Request) {

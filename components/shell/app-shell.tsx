@@ -104,13 +104,14 @@ export function AppShell({ variant, user, children, headerSlot }: AppShellProps)
                 type="button"
                 onClick={() => setMobileOpen(true)}
                 aria-label="Abrir menu"
+                data-dica="Abrir menu"
                 className="rounded-xl border border-gold-500/25 p-2 text-gold-200 transition hover:bg-gold-500/10 lg:hidden"
               >
                 <Menu className="h-5 w-5" />
               </button>
 
               <div>
-                <p className="text-[11px] uppercase tracking-[0.28em] text-gold-500/70">
+                <p className="text-[11px] uppercase tracking-[0.28em] text-gold-400">
                   {variant === 'admin' ? 'Painel administrativo' : 'Painel do cliente'}
                 </p>
                 <h2 className="mt-0.5 text-xl font-semibold text-onyx-50 md:text-2xl">{current.label}</h2>
@@ -139,6 +140,7 @@ export function AppShell({ variant, user, children, headerSlot }: AppShellProps)
           <button
             type="button"
             aria-label="Fechar menu"
+            data-dica="Fechar menu"
             onClick={() => setMobileOpen(false)}
             className="absolute inset-0 bg-onyx-950/75 backdrop-blur-sm"
           />
@@ -149,6 +151,7 @@ export function AppShell({ variant, user, children, headerSlot }: AppShellProps)
                 type="button"
                 onClick={() => setMobileOpen(false)}
                 aria-label="Fechar menu"
+                data-dica="Fechar menu"
                 className="rounded-lg p-2 text-onyx-400 hover:text-gold-200"
               >
                 <X className="h-5 w-5" />
@@ -169,11 +172,12 @@ function Brand({ variant }: { variant: 'client' | 'admin' }) {
       href={variant === 'admin' ? '/admin' : '/dashboard'}
       className="mb-8 flex items-center gap-3 px-2"
       aria-label={`${BRAND_NAME} — ir para o painel`}
+      data-dica={`${BRAND_NAME} — ir para o painel`}
     >
       <BrandMark size={44} className="h-11 w-11 drop-shadow-[0_0_14px_rgb(var(--gold-500)/0.35)]" />
       <span className="min-w-0">
         <BrandWordmark className="block truncate text-base" />
-        <span className="block text-[10px] uppercase tracking-[0.28em] text-gold-500/70">
+        <span className="block text-[10px] uppercase tracking-[0.28em] text-gold-400">
           {variant === 'admin' ? 'Administração' : 'Cliente'}
         </span>
       </span>
@@ -219,7 +223,7 @@ function Nav({
 function SidebarFooter({ variant }: { variant: 'client' | 'admin' }) {
   return (
     <div className="mt-auto rounded-2xl border border-gold-500/15 bg-gradient-to-b from-gold-500/10 to-transparent p-4">
-      <p className="text-[11px] uppercase tracking-[0.22em] text-gold-500/80">
+      <p className="text-[11px] uppercase tracking-[0.22em] text-gold-400">
         {variant === 'admin' ? 'Modo administrador' : 'Plano ativo'}
       </p>
       <p className="mt-2 font-display text-2xl text-onyx-50">

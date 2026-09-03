@@ -85,6 +85,7 @@ export function ResetPasswordForm({ token, nome }: { token: string; nome: string
                 type="button"
                 onClick={() => setShowPassword((value) => !value)}
                 aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                data-dica={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                 className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 text-onyx-400 transition hover:text-gold-300"
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

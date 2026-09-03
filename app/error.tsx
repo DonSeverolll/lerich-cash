@@ -12,7 +12,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4 text-center">
-      <p className="text-xs uppercase tracking-[0.4em] text-gold-500/80">Algo saiu do trilho</p>
+      <p className="text-xs uppercase tracking-[0.4em] text-gold-400">Algo saiu do trilho</p>
       <h1 className="mt-3 font-display text-4xl font-semibold text-gold-gradient">Erro inesperado</h1>
       <p className="mt-4 max-w-md text-onyx-400">
         Não conseguimos carregar esta seção. Tente novamente — se persistir, verifique os logs do servidor.

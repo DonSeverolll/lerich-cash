@@ -13,16 +13,21 @@ export interface PaletaGrafico {
   positivo: string;
   negativo: string;
   eixo: string;
+  /** Legendas precisam de mais contraste que os rótulos dos eixos. */
+  legenda: string;
   grade: string;
   cursor: string;
   tooltip: CSSProperties;
 }
 
 const ESCURO: PaletaGrafico = {
-  serie: ['#d4af37', '#e9cb6d', '#b8912a', '#f2e0a0', '#936e23', '#dcb648', '#674b24', '#faf0cf'],
+  // Tons alternados de claro e escuro para que fatias vizinhas se distingam.
+  // Todos passam de 3:1 contra o fundo do tema — o mínimo para elemento gráfico.
+  serie: ['#e9cb6d', '#8f6f1f', '#f2e0a0', '#b8912a', '#dcb648', '#8a6733', '#faf0cf', '#a07d24'],
   positivo: '#d4af37',
-  negativo: '#f43f5e',
-  eixo: '#8a8a8a',
+  negativo: '#d6304c',
+  eixo: '#9a9a9a',
+  legenda: '#d1d1d1',
   grade: 'rgba(212,175,55,0.12)',
   cursor: 'rgba(212,175,55,0.06)',
   tooltip: {
@@ -35,10 +40,12 @@ const ESCURO: PaletaGrafico = {
 };
 
 const CLARO: PaletaGrafico = {
-  serie: ['#4a535e', '#77828f', '#2f363f', '#9aa4b0', '#5f6a77', '#8b95a2', '#3c444e', '#b6bec8'],
+  // Mesma regra do tema escuro: nenhum tom abaixo de 3:1 sobre o fundo claro.
+  serie: ['#2b323b', '#868f9c', '#3c444e', '#7d8794', '#4a535e', '#838d9a', '#5f6a77', '#6e7885'],
   positivo: '#4a535e',
-  negativo: '#c0392f',
-  eixo: '#6b7480',
+  negativo: '#be123c',
+  eixo: '#5f6a77',
+  legenda: '#333c47',
   grade: 'rgba(74,83,94,0.14)',
   cursor: 'rgba(74,83,94,0.07)',
   tooltip: {
@@ -61,4 +68,13 @@ export function compactTick(value: unknown): string {
   if (Math.abs(number) >= 1_000_000) return `${(number / 1_000_000).toFixed(1)}M`;
   if (Math.abs(number) >= 1_000) return `${Math.round(number / 1_000)}k`;
   return String(number);
+}
+
+/**
+ * Cor de uma categoria no gráfico. A cor gravada no banco é fixa (dourada) e
+ * não acompanharia o tema claro, então a exibição usa a paleta pela posição —
+ * o que também garante contraste entre fatias vizinhas.
+ */
+export function corDeCategoria(indice: number, paleta: PaletaGrafico): string {
+  return paleta.serie[indice % paleta.serie.length];
 }

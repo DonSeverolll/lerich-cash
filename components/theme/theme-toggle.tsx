@@ -20,7 +20,8 @@ export function ThemeToggle({ className }: { className?: string }) {
       onClick={alternar}
       disabled={trocando}
       aria-label={indoParaClaro ? 'Mudar para o modo claro' : 'Mudar para o modo noturno'}
-      title={indoParaClaro ? 'Modo claro' : 'Modo noturno'}
+      data-dica={indoParaClaro ? 'Mudar para o modo claro' : 'Mudar para o modo noturno'}
+      data-dica-lado="esquerda"
       className={cn(
         'group inline-flex h-10 items-center gap-2 rounded-xl border border-gold-500/25 bg-onyx-950/40 px-3 text-sm text-onyx-200 transition',
         'hover:border-gold-500/60 hover:text-gold-100 disabled:opacity-60',

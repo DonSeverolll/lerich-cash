@@ -143,10 +143,12 @@ export function AdminUsersView({ initialUsers, currentUserId }: AdminUsersViewPr
                 placeholder="Buscar por nome, usuário ou e-mail"
                 className="pl-9"
                 aria-label="Buscar usuários"
+                data-dica="Buscar usuários"
               />
             </div>
             <Select
               aria-label="Filtrar por perfil"
+              data-dica="Filtrar por perfil"
               className="md:w-44"
               value={roleFilter}
               onChange={(event) => setRoleFilter(event.target.value as RoleFilter)}
@@ -157,6 +159,7 @@ export function AdminUsersView({ initialUsers, currentUserId }: AdminUsersViewPr
             </Select>
             <Select
               aria-label="Filtrar por status"
+              data-dica="Filtrar por status"
               className="md:w-40"
               value={statusFilter}
               onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
@@ -322,8 +325,8 @@ function IconButton({
   return (
     <button
       type="button"
-      title={label}
       aria-label={label}
+      data-dica={label}
       className={
         tone === 'danger'
           ? 'rounded-lg border border-rose-500/25 p-2 text-rose-300 transition hover:bg-rose-500/15 disabled:opacity-40'

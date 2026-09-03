@@ -33,7 +33,7 @@ import {
 
 import type { DadosFinanceiros } from '@/types';
 
-import { compactTick, paletaGrafico } from '@/lib/chart-theme';
+import { compactTick, corDeCategoria, paletaGrafico } from '@/lib/chart-theme';
 import { currencyBRL } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { Select } from '@/components/ui/select';
 import { StatCard } from '@/components/ui/stat-card';
 import { chamarApi } from '@/lib/api-client';
+import { assinaturaCobraNoMes, mesesRestantes } from '@/lib/assinaturas';
 import { useTema } from '@/components/theme/theme-provider';
 
 function monthKeyLabel(key: string) {
@@ -78,7 +79,7 @@ export function DashboardView({ dados }: { dados: DadosFinanceiros }) {
   const taxaPoupanca = receitasMes > 0 ? (resultado / receitasMes) * 100 : 0;
 
   const totalComprometido = mockSubscriptions
-    .filter((item) => item.ativo)
+    .filter((item) => assinaturaCobraNoMes(item))
     .reduce((sum, item) => sum + item.valor, 0);
 
   // Saldo real: saldo inicial de cada conta mais o efeito de todos os lançamentos.
@@ -134,17 +135,18 @@ export function DashboardView({ dados }: { dados: DadosFinanceiros }) {
           value: doMes
             .filter((tx) => tx.categoria_id === cat.id && tx.tipo === 'DESPESA')
             .reduce((sum, tx) => sum + tx.valor, 0),
-          color: cat.cor_hex || cores.serie[index % cores.serie.length],
+          // A cor vem da paleta do tema, não do hexadecimal gravado.
+          color: corDeCategoria(index, cores),
         }))
         .filter((item) => item.value > 0)
         .sort((a, b) => b.value - a.value),
-    [doMes, mockCategories, cores.serie],
+    [doMes, mockCategories, cores],
   );
 
   const maiorCategoria = despesasPorCategoria[0];
   const hoje = new Date();
   const proximasAssinaturas = [...mockSubscriptions]
-    .filter((item) => item.ativo)
+    .filter((item) => assinaturaCobraNoMes(item))
     .sort((a, b) => {
       const distancia = (dia: number) => (dia - hoje.getDate() + 31) % 31;
       return distancia(a.dia_vencimento) - distancia(b.dia_vencimento);
@@ -197,6 +199,8 @@ export function DashboardView({ dados }: { dados: DadosFinanceiros }) {
         </div>
         <Select
           aria-label="Selecionar mês"
+          data-dica="Selecionar mês"
+          data-dica-lado="esquerda"
           className="sm:w-48"
           value={selectedMonth}
           onChange={(event) => setSelectedMonth(event.target.value)}
@@ -213,7 +217,7 @@ export function DashboardView({ dados }: { dados: DadosFinanceiros }) {
         <StatCard
           title="Saldo consolidado"
           value={currencyBRL(saldoConsolidado)}
-          hint={`${mockAccounts.length} contas conectadas`}
+          hint={`${mockAccounts.length} ${mockAccounts.length === 1 ? 'conta conectada' : 'contas conectadas'}`}
           tone="gold"
           icon={<Wallet className="h-5 w-5" />}
         />
@@ -280,7 +284,10 @@ export function DashboardView({ dados }: { dados: DadosFinanceiros }) {
                   contentStyle={cores.tooltip}
                   formatter={(value) => currencyBRL(Number(value))}
                 />
-                <Legend wrapperStyle={{ fontSize: 12, color: cores.eixo }} />
+                <Legend
+                  wrapperStyle={{ fontSize: 12 }}
+                  formatter={(valor) => <span style={{ color: cores.legenda }}>{valor}</span>}
+                />
                 <Bar name="Receitas" dataKey="receitas" radius={[8, 8, 0, 0]} fill={cores.positivo} />
                 <Bar name="Despesas" dataKey="despesas" radius={[8, 8, 0, 0]} fill={cores.negativo} />
               </BarChart>
@@ -314,7 +321,10 @@ export function DashboardView({ dados }: { dados: DadosFinanceiros }) {
                     ))}
                   </Pie>
                   <Tooltip contentStyle={cores.tooltip} formatter={(value) => currencyBRL(Number(value))} />
-                  <Legend wrapperStyle={{ fontSize: 11, color: cores.eixo }} />
+                  <Legend
+                    wrapperStyle={{ fontSize: 11 }}
+                    formatter={(valor) => <span style={{ color: cores.legenda }}>{valor}</span>}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -382,6 +392,16 @@ export function DashboardView({ dados }: { dados: DadosFinanceiros }) {
                     <p className="truncate font-medium text-onyx-50">{subscription.nome_servico}</p>
                     <p className="flex items-center gap-1.5 text-xs text-onyx-500">
                       <Clock3 className="h-3.5 w-3.5" /> vence dia {subscription.dia_vencimento}
+                      {(() => {
+                        // Avisa antes de o plano acabar, para o prazo não passar batido.
+                        const restantes = mesesRestantes(subscription);
+                        if (restantes === null || restantes > 2) return null;
+                        return (
+                          <span className="text-aviso-200">
+                            · {restantes === 0 ? 'último mês' : `encerra em ${restantes} mês(es)`}
+                          </span>
+                        );
+                      })()}
                     </p>
                   </div>
                   <p className="shrink-0 text-sm font-medium text-rose-300">{currencyBRL(subscription.valor)}</p>

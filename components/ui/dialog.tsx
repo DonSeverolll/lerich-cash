@@ -28,6 +28,7 @@ const DialogContent = React.forwardRef<
       {children}
       <DialogPrimitive.Close
         aria-label="Fechar"
+        data-dica="Fechar"
         className="absolute right-4 top-4 rounded-lg p-1.5 text-onyx-400 transition hover:bg-onyx-50/5 hover:text-gold-200"
       >
         <X className="h-4 w-4" />

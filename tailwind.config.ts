@@ -34,6 +34,9 @@ const config: Config = {
         rose: escala('rose', [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]),
         // Aviso em prata, no lugar do âmbar: o amarelo saiu da identidade.
         aviso: escala('aviso', [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]),
+        // Preenchimento sólido do acento (botão primário, avatares). Separado
+        // da escala `gold` porque no tema claro a escala é espelhada.
+        acento: { de: canal('acento-de'), para: canal('acento-para') },
       },
       borderRadius: {
         xl: '1rem',

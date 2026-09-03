@@ -62,12 +62,12 @@ export function UserMenu({ user }: { user: SessionUser }) {
         aria-expanded={open}
         className="flex items-center gap-2 rounded-xl border border-gold-500/20 bg-onyx-950/50 px-2 py-1.5 text-sm text-onyx-100 transition hover:border-gold-500/50"
       >
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-b from-gold-300 to-gold-600 text-xs font-semibold text-acento">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-b from-acento-de to-acento-para text-xs font-semibold text-acento">
           {initials || <UserRound className="h-4 w-4" />}
         </span>
         <span className="hidden max-w-[9rem] truncate text-left sm:block">
           <span className="block truncate text-xs font-medium text-onyx-100">{user.nome}</span>
-          <span className="block truncate text-[10px] uppercase tracking-wider text-gold-500/80">{user.role}</span>
+          <span className="block truncate text-[10px] uppercase tracking-wider text-gold-400">{user.role}</span>
         </span>
         <ChevronDown className="h-4 w-4 text-onyx-400" />
       </button>

@@ -141,7 +141,7 @@ export function ForgotPasswordForm() {
             </p>
 
             <div className="mt-6 rounded-2xl border border-gold-500/25 bg-gold-500/5 px-4 py-5 text-center">
-              <p className="text-[11px] uppercase tracking-[0.2em] text-gold-500/80">E-mail cadastrado</p>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-gold-400">E-mail cadastrado</p>
               <p className="mt-2 font-display text-2xl font-semibold tracking-wide text-gold-100">
                 {confirmacao.emailMascarado}
               </p>

@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import type { DadosFinanceiros, Subscription } from '@/types';
 
 import { chamarApi } from '@/lib/api-client';
+import { mesesRestantes, rotuloCompetencia, situacaoDaAssinatura } from '@/lib/assinaturas';
 import { currencyBRL } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,6 +26,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 
+const rotuloSituacao = {
+  ATIVA: { texto: 'Ativo', tom: 'success' },
+  PAUSADA: { texto: 'Pausado', tom: 'neutral' },
+  ENCERRADA: { texto: 'Encerrado', tom: 'warning' },
+} as const;
+
 export function SubscriptionsView({ dados }: { dados: DadosFinanceiros }) {
   const router = useRouter();
   const [criando, setCriando] = useState(false);
@@ -32,7 +39,8 @@ export function SubscriptionsView({ dados }: { dados: DadosFinanceiros }) {
   const [removendo, setRemovendo] = useState<Subscription | null>(null);
   const [pendenteId, setPendenteId] = useState<string | null>(null);
 
-  const ativas = dados.assinaturas.filter((item) => item.ativo);
+  // "Ativa" aqui é quem realmente cobra: pausada e encerrada ficam de fora.
+  const ativas = dados.assinaturas.filter((item) => situacaoDaAssinatura(item) === 'ATIVA');
   const total = ativas.reduce((soma, item) => soma + item.valor, 0);
 
   /** Renda média dos meses que já tiveram receita. */
@@ -121,7 +129,7 @@ export function SubscriptionsView({ dados }: { dados: DadosFinanceiros }) {
           <div>
             <CardTitle>Assinaturas &amp; Planos</CardTitle>
             <CardDescription>
-              {ativas.length} ativa(s) de {dados.assinaturas.length} cadastrada(s)
+              {ativas.length} cobrando de {dados.assinaturas.length} cadastrada(s)
             </CardDescription>
           </div>
           <Button className="gap-2" onClick={() => setCriando(true)}>
@@ -146,7 +154,7 @@ export function SubscriptionsView({ dados }: { dados: DadosFinanceiros }) {
                 <>
                   <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-onyx-950/50">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-gold-300 to-gold-600"
+                      className="h-full rounded-full bg-gradient-to-r from-acento-de to-acento-para"
                       style={{ width: `${Math.min(100, percentualRenda)}%` }}
                     />
                   </div>
@@ -192,10 +200,13 @@ export function SubscriptionsView({ dados }: { dados: DadosFinanceiros }) {
             const categoria = dados.categorias.find((item) => item.id === assinatura.categoria_id);
             const conta = dados.contas.find((item) => item.id === assinatura.conta_id);
             const impacto = total ? (assinatura.valor / total) * 100 : 0;
+            const contaNoTotal = situacaoDaAssinatura(assinatura) === 'ATIVA';
             const ocupado = pendenteId === assinatura.id;
+            const situacao = situacaoDaAssinatura(assinatura);
+            const restantes = mesesRestantes(assinatura);
 
             return (
-              <Card key={assinatura.id} className={assinatura.ativo ? undefined : 'opacity-60'}>
+              <Card key={assinatura.id} className={situacao === 'ATIVA' ? undefined : 'opacity-60'}>
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -205,12 +216,11 @@ export function SubscriptionsView({ dados }: { dados: DadosFinanceiros }) {
                       </CardDescription>
                     </div>
                     <div className="flex shrink-0 items-center gap-1.5">
-                      <Badge tone={assinatura.ativo ? 'success' : 'neutral'}>
-                        {assinatura.ativo ? 'Ativo' : 'Pausado'}
-                      </Badge>
+                      <Badge tone={rotuloSituacao[situacao].tom}>{rotuloSituacao[situacao].texto}</Badge>
                       <button
                         type="button"
                         aria-label={`Editar ${assinatura.nome_servico}`}
+                        data-dica={`Editar ${assinatura.nome_servico}`}
                         onClick={() => setEditando(assinatura)}
                         className="rounded-lg border border-gold-500/20 p-1.5 text-onyx-300 transition hover:border-gold-500/50 hover:text-gold-200"
                       >
@@ -219,6 +229,7 @@ export function SubscriptionsView({ dados }: { dados: DadosFinanceiros }) {
                       <button
                         type="button"
                         aria-label={`Remover ${assinatura.nome_servico}`}
+                        data-dica={`Remover ${assinatura.nome_servico}`}
                         onClick={() => setRemovendo(assinatura)}
                         className="rounded-lg border border-rose-500/25 p-1.5 text-rose-300 transition hover:bg-rose-500/15"
                       >
@@ -238,15 +249,26 @@ export function SubscriptionsView({ dados }: { dados: DadosFinanceiros }) {
                     <span>Dia {assinatura.dia_vencimento}</span>
                   </div>
 
+                  <div className="flex items-center justify-between text-sm text-onyx-300">
+                    <span>Período</span>
+                    <span className={situacao === 'ENCERRADA' ? 'text-rose-300' : undefined}>
+                      {assinatura.vigente_ate
+                        ? `até ${rotuloCompetencia(assinatura.vigente_ate)}${
+                            restantes !== null && restantes > 0 ? ` · ${restantes} mês(es)` : ''
+                          }`
+                        : 'sem prazo'}
+                    </span>
+                  </div>
+
                   <div>
                     <div className="flex items-center justify-between text-sm text-onyx-300">
                       <span>Impacto no total</span>
-                      <span>{impacto.toFixed(1)}%</span>
+                      <span>{contaNoTotal ? `${impacto.toFixed(1)}%` : 'fora do total'}</span>
                     </div>
                     <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-onyx-50/5">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-gold-400 to-gold-700"
-                        style={{ width: `${Math.min(100, impacto)}%` }}
+                        style={{ width: `${contaNoTotal ? Math.min(100, impacto) : 0}%` }}
                       />
                     </div>
                   </div>
@@ -256,7 +278,7 @@ export function SubscriptionsView({ dados }: { dados: DadosFinanceiros }) {
                       variant="outline"
                       className="flex-1 justify-center gap-2"
                       onClick={() => lancar(assinatura)}
-                      disabled={!assinatura.ativo || ocupado}
+                      disabled={situacao !== 'ATIVA' || ocupado}
                     >
                       {ocupado ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                       Lançar mês
@@ -348,12 +370,16 @@ function AssinaturaDialog({
     event.preventDefault();
     const form = new FormData(event.currentTarget);
 
+    const ate = String(form.get('vigente_ate') ?? '').trim();
+
     const corpo = {
       conta_id: String(form.get('conta_id')),
       categoria_id: String(form.get('categoria_id')),
       nome_servico: String(form.get('nome_servico')),
       valor: Number(String(form.get('valor')).replace(',', '.')),
       dia_vencimento: Number(form.get('dia_vencimento')),
+      // Campo vazio significa "sem prazo": mandamos null para limpar.
+      vigente_ate: ate || null,
     };
 
     setPendente(true);
@@ -421,6 +447,19 @@ function AssinaturaDialog({
                 defaultValue={assinatura?.dia_vencimento ?? 10}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="as-ate">Cobrar até (opcional)</Label>
+            <Input
+              id="as-ate"
+              name="vigente_ate"
+              type="month"
+              defaultValue={assinatura?.vigente_ate ?? ''}
+            />
+            <p className="text-xs text-onyx-500">
+              Último mês em que o plano será cobrado. Em branco, segue sem prazo.
+            </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">

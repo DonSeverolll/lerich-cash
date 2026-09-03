@@ -31,6 +31,11 @@ export interface Subscription {
   valor: number;
   dia_vencimento: number;
   ativo: boolean;
+  /**
+   * Último mês em que o plano é cobrado, no formato `AAAA-MM`, inclusive.
+   * `null` significa sem prazo definido — segue até ser pausado ou removido.
+   */
+  vigente_ate?: string | null;
   created_at: string;
 }
 

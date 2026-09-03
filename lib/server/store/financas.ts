@@ -21,6 +21,7 @@ import type {
 } from '@/types';
 
 import { randomId } from '@/lib/auth/crypto';
+import { assinaturaCobraNoMes, competencia as competenciaDe } from '@/lib/assinaturas';
 
 import { repo } from './driver';
 
@@ -195,6 +196,8 @@ export interface AssinaturaInput {
   valor: number;
   dia_vencimento: number;
   ativo?: boolean;
+  /** Último mês cobrado, `AAAA-MM`. `null` = sem prazo. */
+  vigente_ate?: string | null;
 }
 
 async function conferirVinculos(userId: string, contaId: string, categoriaId: string) {
@@ -220,6 +223,7 @@ export async function criarAssinatura(userId: string, input: AssinaturaInput): P
     valor: input.valor,
     dia_vencimento: input.dia_vencimento,
     ativo: input.ativo ?? true,
+    vigente_ate: input.vigente_ate ?? null,
     created_at: new Date().toISOString(),
   };
 
@@ -248,6 +252,7 @@ export async function atualizarAssinatura(
     valor: patch.valor ?? atual.valor,
     dia_vencimento: patch.dia_vencimento ?? atual.dia_vencimento,
     ativo: patch.ativo ?? atual.ativo,
+    vigente_ate: patch.vigente_ate !== undefined ? patch.vigente_ate : (atual.vigente_ate ?? null),
   };
 
   await store.saveSubscription(atualizada);
@@ -270,6 +275,9 @@ export async function lancarAssinatura(userId: string, id: string): Promise<Tran
   if (!assinatura.ativo) throw new Error('Esta assinatura está pausada.');
 
   const hoje = new Date();
+  if (assinatura.vigente_ate && competenciaDe(hoje) > assinatura.vigente_ate) {
+    throw new Error(`Este plano se encerrou em ${assinatura.vigente_ate}. Estenda o prazo para voltar a lançar.`);
+  }
   const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
   const dia = Math.min(assinatura.dia_vencimento, ultimoDia);
   const data = new Date(hoje.getFullYear(), hoje.getMonth(), dia, 12, 0, 0);
@@ -428,7 +436,7 @@ export async function resumoGlobal(): Promise<ResumoGlobal> {
     custodia: [...saldoPorConta.values()].reduce((soma, valor) => soma + valor, 0),
     volumeTransacionado: transacoes.reduce((soma, item) => soma + item.valor, 0),
     recorrenteMensal: assinaturas
-      .filter((item) => item.ativo)
+      .filter((item) => assinaturaCobraNoMes(item))
       .reduce((soma, item) => soma + item.valor, 0),
     totalTransacoes: transacoes.length,
   };
