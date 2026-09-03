@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Database, LoaderCircle, Save, ShieldCheck } from 'lucide-react';
+import { Database, LoaderCircle, Mail, Save, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { AppSettings, StoreDriver } from '@/types';
+import type { StatusEmail } from '@/lib/server/mailer';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,9 +23,11 @@ const rotuloDriver: Record<StoreDriver, string> = {
 export function AdminSettingsView({
   initialSettings,
   driver,
+  email,
 }: {
   initialSettings: AppSettings;
   driver: StoreDriver;
+  email: StatusEmail;
 }) {
   const [settings, setSettings] = useState(initialSettings);
   const [pending, setPending] = useState(false);
@@ -155,6 +158,52 @@ export function AdminSettingsView({
             <Item icon={<ShieldCheck className="h-4 w-4" />} title="Bloqueio por tentativas">
               5 falhas consecutivas suspendem o login daquele usuário/IP por 5 minutos.
             </Item>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>E-mail transacional</CardTitle>
+            <CardDescription>Usado no link de recuperação de senha</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 pt-0 text-sm text-onyx-300">
+            <div className="flex items-center justify-between rounded-xl border border-gold-500/20 bg-gold-500/5 px-3.5 py-3">
+              <span className="flex items-center gap-2 text-onyx-200">
+                <Mail className="h-4 w-4 text-gold-400" />
+                Envio
+              </span>
+              <Badge tone={email.configurado ? (email.remetenteRestrito ? 'warning' : 'success') : 'danger'}>
+                {email.configurado ? (email.remetenteRestrito ? 'Alcance limitado' : 'Ativo') : 'Desligado'}
+              </Badge>
+            </div>
+
+            {email.configurado ? null : (
+              <Item icon={<Mail className="h-4 w-4" />} title="Nenhum e-mail está saindo">
+                Sem <code>RESEND_API_KEY</code> o link de recuperação é apenas gravado no log do
+                servidor. O cliente conclui o pedido na tela e não recebe nada.
+              </Item>
+            )}
+
+            {email.configurado && email.remetenteRestrito ? (
+              <Item icon={<Mail className="h-4 w-4" />} title="Remetente compartilhado do Resend">
+                <code>onboarding@resend.dev</code> só entrega para o e-mail dono da conta no Resend.
+                Para atender clientes, cadastre um domínio próprio e aponte o <code>MAIL_FROM</code>
+                {' '}para ele.
+              </Item>
+            ) : null}
+
+            <Item icon={<Mail className="h-4 w-4" />} title="Remetente">
+              {email.remetente}
+            </Item>
+
+            <Item icon={<Mail className="h-4 w-4" />} title="Base dos links">
+              {email.baseDosLinks ??
+                'Não definida — o link usa o domínio da própria requisição. Defina APP_URL se o site ficar atrás de proxy.'}
+            </Item>
+
+            <p className="text-xs leading-relaxed text-onyx-500">
+              Cada pedido de recuperação fica registrado na Auditoria, com o resultado do envio.
+            </p>
           </CardContent>
         </Card>
 

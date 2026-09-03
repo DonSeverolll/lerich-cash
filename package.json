@@ -7,7 +7,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "firebase:check": "node scripts/verificar-firebase.mjs"
+    "firebase:check": "node scripts/verificar-firebase.mjs",
+    "mail:check": "node scripts/verificar-email.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.1",

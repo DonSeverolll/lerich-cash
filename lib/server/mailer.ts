@@ -27,9 +27,38 @@ export function mailerConfigurado(): boolean {
   return Boolean(process.env.RESEND_API_KEY);
 }
 
+/** Remetente em uso, já com o padrão aplicado. */
+export const REMETENTE_PADRAO = 'Lerich Finance <onboarding@resend.dev>';
+
+export interface StatusEmail {
+  configurado: boolean;
+  remetente: string;
+  /**
+   * `onboarding@resend.dev` é o remetente compartilhado do Resend: ele só
+   * entrega para o e-mail dono da conta. O painel precisa dizer isso, senão a
+   * recuperação de senha parece funcionar e nenhum cliente recebe nada.
+   */
+  remetenteRestrito: boolean;
+  /** Base dos links quando não há requisição para inspecionar. */
+  baseDosLinks: string | null;
+}
+
+export function statusDoEmail(): StatusEmail {
+  const remetente = process.env.MAIL_FROM?.trim() || REMETENTE_PADRAO;
+  const configurada = process.env.APP_URL?.trim();
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
+
+  return {
+    configurado: mailerConfigurado(),
+    remetente,
+    remetenteRestrito: /@resend\.dev>?$/i.test(remetente),
+    baseDosLinks: configurada?.replace(/\/$/, '') ?? (vercel ? `https://${vercel}` : null),
+  };
+}
+
 export async function enviarEmail({ para, assunto, html, texto }: MailInput): Promise<MailResult> {
   const apiKey = process.env.RESEND_API_KEY;
-  const remetente = process.env.MAIL_FROM ?? 'Lerich Finance <onboarding@resend.dev>';
+  const remetente = process.env.MAIL_FROM?.trim() || REMETENTE_PADRAO;
 
   if (!apiKey) {
     console.warn(
