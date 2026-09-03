@@ -77,7 +77,7 @@ export function UserMenu({ user }: { user: SessionUser }) {
           role="menu"
           // Fundo opaco: com transparência, o conteúdo da página aparecia por
           // trás dos itens e atrapalhava a leitura.
-          className="absolute right-0 z-50 mt-2 w-60 overflow-hidden rounded-2xl border border-gold-500/25 bg-onyx-950 p-1.5 shadow-soft"
+          className="absolute right-0 z-50 mt-2 w-60 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-gold-500/25 bg-onyx-950 p-1.5 shadow-soft"
         >
           <div className="px-3 py-2.5">
             <p className="truncate text-sm font-medium text-onyx-50">{user.nome}</p>

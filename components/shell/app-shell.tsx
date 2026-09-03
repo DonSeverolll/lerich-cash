@@ -119,7 +119,13 @@ export function AppShell({ variant, user, children, headerSlot }: AppShellProps)
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            {/*
+              `justify-end` vale para o empilhamento do celular: ali este bloco
+              ocupa a largura toda e, alinhado à esquerda, jogava o menu do
+              usuário para fora da tela. No desktop o bloco tem a largura do
+              conteúdo e a regra não muda nada.
+            */}
+            <div className="flex items-center justify-end gap-3">
               {headerSlot}
               <ThemeToggle />
               <span className="hidden items-center gap-2 rounded-xl border border-gold-500/20 bg-onyx-950/50 px-3 py-2 text-sm capitalize text-onyx-200 sm:inline-flex">
